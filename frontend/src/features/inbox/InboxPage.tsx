@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   ArrowLeftOutlined,
@@ -21,7 +21,7 @@ import {
   StarFilled,
   StarOutlined as StarO,
   StarOutlined,
-} from '@ant-design/icons';
+} from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -32,9 +32,9 @@ import {
   Layout,
   Menu,
   Typography,
-} from 'antd';
-import React, { useState } from 'react';
-import styled from 'styled-components';
+} from "antd";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 const { Sider } = Layout;
 const { Text, Title } = Typography;
@@ -54,7 +54,7 @@ const StyledSider = styled(Sider)<StyledSiderProps>`
   background: #fff;
   border-right: 1px solid #f0f0f0;
   @media (max-width: 768px) {
-    display: ${({ collapsed }) => (collapsed ? 'none' : 'block')};
+    display: ${({ collapsed }) => (collapsed ? "none" : "block")};
     position: absolute;
     z-index: 10;
     height: 100%;
@@ -71,7 +71,7 @@ const EmailList = styled.div<EmailListProps>`
   overflow-y: none;
   border-right: 1px solid #f0f0f0;
   @media (max-width: 992px) {
-    display: ${({ show }) => (show ? 'block' : 'none')};
+    display: ${({ show }) => (show ? "block" : "none")};
     width: 100%;
   }
 `;
@@ -105,7 +105,7 @@ const EmailDetail = styled.div<EmailDetailProps>`
   overflow-y: none;
   padding: 24px;
   @media (max-width: 992px) {
-    display: ${({ show }) => (show ? 'block' : 'none')};
+    display: ${({ show }) => (show ? "block" : "none")};
     width: 100%;
   }
 `;
@@ -120,7 +120,7 @@ const EmailItem = styled.div<EmailItemProps>`
   cursor: pointer;
   display: flex;
   align-items: center;
-  background: ${({ selected }) => (selected ? '#e6f7ff' : 'white')};
+  background: ${({ selected }) => (selected ? "#e6f7ff" : "white")};
   &:hover {
     background: #f5f5f5;
   }
@@ -166,25 +166,25 @@ const MobileHeader = styled.div`
 
 // Mock data
 const mockMailboxes: IMailbox[] = [
-  { id: 'inbox', name: 'Inbox' },
-  { id: 'starred', name: 'Starred' },
-  { id: 'sent', name: 'Sent' },
-  { id: 'drafts', name: 'Drafts' },
-  { id: 'archive', name: 'Archive' },
-  { id: 'trash', name: 'Trash' },
-  { id: 'custom1', name: 'Work' },
-  { id: 'custom2', name: 'Personal' },
+  { id: "inbox", name: "Inbox" },
+  { id: "starred", name: "Starred" },
+  { id: "sent", name: "Sent" },
+  { id: "drafts", name: "Drafts" },
+  { id: "archive", name: "Archive" },
+  { id: "trash", name: "Trash" },
+  { id: "custom1", name: "Work" },
+  { id: "custom2", name: "Personal" },
 ];
 
 const mockEmails: IEmail[] = Array.from({ length: 20 }, (_, i) => ({
   id: `${i + 1}`,
-  mailboxId: 'inbox',
+  mailboxId: "inbox",
   sender:
     i % 2 === 0
-      ? 'John Doe <john@example.com>'
-      : 'Jane Smith <jane@example.com>',
+      ? "John Doe <john@example.com>"
+      : "Jane Smith <jane@example.com>",
   subject: `This is email subject ${i + 1}`,
-  preview: 'This is a preview of the email content...',
+  preview: "This is a preview of the email content...",
   timestamp: new Date(Date.now() - i * 1000 * 60 * 60).toISOString(),
   isRead: i > 2,
   isStarred: i % 4 === 0,
@@ -230,9 +230,9 @@ const InboxPage: React.FC = () => {
     }
   };
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedMailbox, setSelectedMailbox] = useState('inbox');
+  const [selectedMailbox, setSelectedMailbox] = useState("inbox");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
   const [showEmailList, setShowEmailList] = useState(true);
   const [showEmailDetail, setShowEmailDetail] = useState(false);
@@ -250,9 +250,9 @@ const InboxPage: React.FC = () => {
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [showEmailDetail]);
 
   const filteredEmails = mockEmails.filter(
@@ -260,11 +260,11 @@ const InboxPage: React.FC = () => {
       email.mailboxId === selectedMailbox &&
       (email.subject.toLowerCase().includes(searchText.toLowerCase()) ||
         email.sender.toLowerCase().includes(searchText.toLowerCase()) ||
-        email.preview.toLowerCase().includes(searchText.toLowerCase())),
+        email.preview.toLowerCase().includes(searchText.toLowerCase()))
   );
 
   const selectedEmailData = mockEmails.find(
-    (email) => email.id === selectedEmail,
+    (email) => email.id === selectedEmail
   );
 
   const handleEmailClick = (emailId: string) => {
@@ -286,32 +286,32 @@ const InboxPage: React.FC = () => {
 
     if (date.toDateString() === now.toDateString()) {
       return date.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
       });
     }
 
     if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
     }
 
     return date.toLocaleDateString([], {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const menu = (
     <Menu>
-      <Menu.Item key='markAsRead' icon={<CheckOutlined />}>
+      <Menu.Item key="markAsRead" icon={<CheckOutlined />}>
         Đánh dấu đã đọc
       </Menu.Item>
-      <Menu.Item key='markAsUnread' icon={<MailOutlined />}>
+      <Menu.Item key="markAsUnread" icon={<MailOutlined />}>
         Đánh dấu chưa đọc
       </Menu.Item>
       <Menu.Divider />
-      <Menu.Item key='delete' danger icon={<DeleteOutlined />}>
+      <Menu.Item key="delete" danger icon={<DeleteOutlined />}>
         Xóa
       </Menu.Item>
     </Menu>
@@ -320,7 +320,7 @@ const InboxPage: React.FC = () => {
   return (
     <StyledLayout>
       <StyledSider
-        key='main-sider'
+        key="main-sider"
         width={250}
         collapsible
         collapsed={collapsed}
@@ -328,48 +328,48 @@ const InboxPage: React.FC = () => {
         trigger={null}
         collapsedWidth={isMobile ? 0 : 80}
       >
-        <div style={{ padding: '16px', textAlign: 'center' }}>
+        <div style={{ padding: "16px", textAlign: "center" }}>
           <Button
-            type='primary'
+            type="primary"
             icon={<EditOutlined />}
             block
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
           >
-            {!collapsed && 'Soạn thư'}
+            {!collapsed && "Soạn thư"}
           </Button>
           <Search
-            placeholder='Tìm kiếm...'
+            placeholder="Tìm kiếm..."
             onSearch={(value) => setSearchText(value)}
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
             allowClear
           />
         </div>
         <Menu
-          mode='inline'
+          mode="inline"
           selectedKeys={[selectedMailbox]}
           onClick={({ key }) => setSelectedMailbox(key as string)}
         >
-          <Menu.Item key='inbox' icon={<InboxOutlined />}>
-            Hộp thư đến{' '}
-            <span style={{ float: 'right' }}>{mockEmails.length}</span>
+          <Menu.Item key="inbox" icon={<InboxOutlined />}>
+            Hộp thư đến{" "}
+            <span style={{ float: "right" }}>{mockEmails.length}</span>
           </Menu.Item>
-          <Menu.Item key='starred' icon={<StarOutlined />}>
+          <Menu.Item key="starred" icon={<StarOutlined />}>
             Đã gắn dấu sao
           </Menu.Item>
-          <Menu.Item key='sent' icon={<SendOutlined />}>
+          <Menu.Item key="sent" icon={<SendOutlined />}>
             Đã gửi
           </Menu.Item>
-          <Menu.Item key='drafts' icon={<FileOutlined />}>
+          <Menu.Item key="drafts" icon={<FileOutlined />}>
             Nháp
           </Menu.Item>
-          <Menu.Item key='archive' icon={<FolderOutlined />}>
+          <Menu.Item key="archive" icon={<FolderOutlined />}>
             Lưu trữ
           </Menu.Item>
-          <Menu.Item key='trash' icon={<DeleteOutlined />}>
+          <Menu.Item key="trash" icon={<DeleteOutlined />}>
             Thùng rác
           </Menu.Item>
           <Menu.Divider />
-          <Menu.ItemGroup title='Thư mục'>
+          <Menu.ItemGroup title="Thư mục">
             {mockMailboxes.slice(6).map((mailbox) => (
               <Menu.Item key={mailbox.id} icon={<FolderOutlined />}>
                 {mailbox.name}
@@ -384,19 +384,19 @@ const InboxPage: React.FC = () => {
           <Button
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            type='text'
+            type="text"
           />
           {!showEmailList && (
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={handleBackToList}
-              type='text'
+              type="text"
             >
               Quay lại
             </Button>
           )}
           <div style={{ flex: 1 }}></div>
-          <Button icon={<ReloadOutlined />} type='text' />
+          <Button icon={<ReloadOutlined />} type="text" />
         </MobileHeader>
 
         <DivEmailList>
@@ -413,17 +413,17 @@ const InboxPage: React.FC = () => {
                   checkedEmails.size < filteredEmails.length
                 }
               />
-              <Button type='text' icon={<ReloadOutlined />} />
-              <Button type='text' icon={<DeleteOutlined />} />
-              <Button type='text' icon={<MailOutlined />} />
-              <Dropdown overlay={menu} trigger={['click']}>
-                <Button type='text' icon={<MoreOutlined />} />
+              <Button type="text" icon={<ReloadOutlined />} />
+              <Button type="text" icon={<DeleteOutlined />} />
+              <Button type="text" icon={<MailOutlined />} />
+              <Dropdown overlay={menu} trigger={["click"]}>
+                <Button type="text" icon={<MoreOutlined />} />
               </Dropdown>
               <div style={{ flex: 1 }} />
-              <Button type='text' icon={<CheckSquareOutlined />} />
+              <Button type="text" icon={<CheckSquareOutlined />} />
             </Toolbar>
 
-            <div style={{ height: 'calc(100vh - 112px)', overflowY: 'auto' }}>
+            <div style={{ height: "calc(100vh - 112px)", overflowY: "auto" }}>
               {filteredEmails.map((email) => (
                 <EmailItem
                   key={email.id}
@@ -432,15 +432,15 @@ const InboxPage: React.FC = () => {
                 >
                   <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      width: '100%',
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        display: "flex",
+                        alignItems: "center",
                         minWidth: 40,
                       }}
                     >
@@ -453,10 +453,10 @@ const InboxPage: React.FC = () => {
                         }}
                       />
                       <Button
-                        type='text'
+                        type="text"
                         icon={
                           email.isStarred ? (
-                            <StarFilled style={{ color: '#faad14' }} />
+                            <StarFilled style={{ color: "#faad14" }} />
                           ) : (
                             <StarO />
                           )
@@ -471,23 +471,23 @@ const InboxPage: React.FC = () => {
                     <EmailPreview>
                       <div
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
+                          display: "flex",
+                          justifyContent: "space-between",
                         }}
                       >
                         <EmailSubject
                           style={{
-                            fontWeight: email.isRead ? 'normal' : 'bold',
+                            fontWeight: email.isRead ? "normal" : "bold",
                           }}
                         >
-                          {email.sender.split('<')[0].trim()}
+                          {email.sender.split("<")[0].trim()}
                         </EmailSubject>
                         <EmailTime>{formatDate(email.timestamp)}</EmailTime>
                       </div>
                       <div
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
+                          display: "flex",
+                          justifyContent: "space-between",
                         }}
                       >
                         <div>
@@ -497,14 +497,14 @@ const InboxPage: React.FC = () => {
                           >
                             {email.subject}
                           </Text>
-                          <Text type='secondary'>
+                          <Text type="secondary">
                             {email.preview.length > 50
                               ? `${email.preview.substring(0, 50)}...`
                               : email.preview}
                           </Text>
                         </div>
                         {email.hasAttachment && (
-                          <PaperClipOutlined style={{ color: '#8c8c8c' }} />
+                          <PaperClipOutlined style={{ color: "#8c8c8c" }} />
                         )}
                       </div>
                     </EmailPreview>
@@ -524,37 +524,37 @@ const InboxPage: React.FC = () => {
                     </Title>
                     <div
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
+                        display: "flex",
+                        justifyContent: "space-between",
                         marginTop: 8,
                       }}
                     >
-                      <Text type='secondary'>
+                      <Text type="secondary">
                         Từ: {selectedEmailData.sender}
                       </Text>
                       <div>
-                        <Text type='secondary' style={{ marginRight: 16 }}>
+                        <Text type="secondary" style={{ marginRight: 16 }}>
                           {new Date(
-                            selectedEmailData.timestamp,
+                            selectedEmailData.timestamp
                           ).toLocaleString()}
                         </Text>
-                        <Button type='text' icon={<StarOutlined />} />
-                        <Button type='text' icon={<ForwardOutlined />} />
-                        <Button type='text' icon={<SendOutlined />} />
-                        <Button type='text' icon={<DeleteOutlined />} />
+                        <Button type="text" icon={<StarOutlined />} />
+                        <Button type="text" icon={<ForwardOutlined />} />
+                        <Button type="text" icon={<SendOutlined />} />
+                        <Button type="text" icon={<DeleteOutlined />} />
                       </div>
                     </div>
                   </div>
                 }
                 bordered={false}
                 style={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
-                bodyStyle={{ flex: 1, overflowY: 'auto' }}
+                bodyStyle={{ flex: 1, overflowY: "auto" }}
               >
-                <div style={{ whiteSpace: 'pre-line' }}>
+                <div style={{ whiteSpace: "pre-line" }}>
                   <p>Xin chào,</p>
                   <p>
                     Đây là nội dung email mẫu. Bạn có thể xem chi tiết email ở
@@ -565,9 +565,9 @@ const InboxPage: React.FC = () => {
                 </div>
                 {selectedEmailData.hasAttachment && (
                   <div style={{ marginTop: 24 }}>
-                    <Divider orientation='left'>Tệp đính kèm</Divider>
-                    <div style={{ padding: '8px 0' }}>
-                      <Button icon={<DownloadOutlined />} type='link'>
+                    <Divider orientation="left">Tệp đính kèm</Divider>
+                    <div style={{ padding: "8px 0" }}>
+                      <Button icon={<DownloadOutlined />} type="link">
                         document.pdf
                       </Button>
                     </div>
@@ -577,12 +577,12 @@ const InboxPage: React.FC = () => {
             ) : (
               <div
                 style={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#8c8c8c',
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#8c8c8c",
                 }}
               >
                 <MailOutlined style={{ fontSize: 48, marginBottom: 16 }} />
