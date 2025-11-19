@@ -2,8 +2,8 @@ import { useAppDispatch } from '@/redux/hooks';
 import { setAccessToken } from '@/redux/slices/authSlice';
 import { App, Form } from 'antd';
 import { useRouter } from 'next/navigation';
-import { LoginFormValues } from '../interfaces';
 import { useMutationLogin } from './loginAPI';
+import { LoginFormValues } from '../interfaces/login.interface';
 
 export const useLogin = () => {
   const { notification } = App.useApp();

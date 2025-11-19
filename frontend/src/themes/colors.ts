@@ -1,0 +1,32 @@
+export const colors = {
+  colorPrimary: '#1b67b3',
+  colorSecondary: '#E8FFF3',
+  colorBgContainer: '#3587d8',
+  colorGrayText: '#666',
+  colorGray800: '#3F4254',
+  colorGray700: '#5e6278',
+  colorGray500: '#A1A5B7',
+  colorGray400: '#B5B5C3',
+  colorGray300: '#E1E3EA',
+  colorGray200: '#ECECEC',
+  colorGray100: '#F9F9F9',
+  colorBlue500: '#008ede',
+  colorBlue: '#1D73CC',
+  colorBlueBg: '#F1FAFF',
+  colorPrimaryTag: '#d1efff',
+  colorSecondaryTag: '#B7FDE8',
+  colorWhite100: '#FFFFFF',
+  colorBlack100: '#000000',
+  colorGreen400: '#548135',
+  colorRed700: '#c00000',
+  lightRed: '#ff4d4f',
+  colorPreviousYearSales: 'rgba(241, 65, 108, 1)',
+  currentPeriodSales: 'rgba(29, 115, 204, 1)',
+  expectationSales: '#69b1ff',
+  colorQuaternarySelectBackground: '#f1faff',
+  colorQuaternarySelectText: '#0074d1',
+};
+
+export const colorGeneral = {
+  ...colors,
+};
