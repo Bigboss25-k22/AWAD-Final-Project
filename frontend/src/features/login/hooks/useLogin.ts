@@ -2,7 +2,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setAccessToken } from "@/redux/slices/authSlice";
 import { App, Form } from "antd";
 import { useRouter } from "next/navigation";
-import { LoginFormValues } from "../interfaces";
+import { LoginFormValues } from "../interfaces/login.interface";
 import { useMutationLogin, useMutationGoogleLogin } from "./loginAPI";
 import { CredentialResponse } from "@react-oauth/google";
 
