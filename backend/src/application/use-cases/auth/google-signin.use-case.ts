@@ -4,16 +4,21 @@ import type { UserRepository } from 'src/domain/repositories/user.repository';
 import { User } from 'src/domain/entities/user.entity';
 import type { ITokenService } from 'src/application/ports/token.port';
 import type { IPasswordService } from 'src/application/ports/password.port';
+import { InvalidCredentialsError } from 'src/application/errors/invalid-credentials.error';
+import { EmailAlreadyExistsError } from 'src/application/errors/email-already-exists.error';
 
 export class GoogleSignInUseCase {
   private oauthClient: OAuth2Client;
   constructor(
-    private userRepository: UserRepository,
-    private tokenService: ITokenService,
-    private passwordService: IPasswordService,
+    private readonly userRepository: UserRepository,
+    private readonly tokenService: ITokenService,
+    private readonly passwordService: IPasswordService,
     //googleClientId: string,
   ) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new Error('Missing GOOGLE_CLIENT_ID environment variable');
+    }
     this.oauthClient = new OAuth2Client(clientId);
   }
 
@@ -25,11 +30,11 @@ export class GoogleSignInUseCase {
 
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
-      throw new Error('Invalid Google ID token');
+      throw new InvalidCredentialsError('Invalid Google ID token');
     }
 
     if (!payload.email || !payload.email_verified) {
-      throw new Error('Email not verified by Google');
+      throw new InvalidCredentialsError('Email not verified by Google');
     }
 
     const email = payload.email;
@@ -47,7 +52,9 @@ export class GoogleSignInUseCase {
 
       user = await this.userRepository.create(u);
     } else if (user.provider !== 'google' && user.provider) {
-      throw new Error(`User already registered with ${user.provider}`);
+      throw new EmailAlreadyExistsError(
+        `User already registered with ${user.provider}`,
+      );
     }
 
     const accessToken = this.tokenService.generateAccessToken(user);
