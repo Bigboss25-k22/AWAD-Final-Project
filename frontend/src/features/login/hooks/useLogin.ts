@@ -2,7 +2,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setAccessToken } from "@/redux/slices/authSlice";
 import { App, Form } from "antd";
 import { useRouter } from "next/navigation";
-import { LoginFormValues } from "../interfaces";
+import { LoginFormValues } from "../interfaces/login.interface";
 import { useMutationLogin, useMutationGoogleLogin } from "./loginAPI";
 import { CredentialResponse } from "@react-oauth/google";
 
@@ -36,7 +36,7 @@ export const useLogin = () => {
           message: "Login Successful",
           description: "You have successfully logged in with Google.",
         });
-        router.push("/");
+        router.push("/inbox");
       },
       onError: (error) => {
         notification.error({
@@ -69,7 +69,7 @@ export const useLogin = () => {
       dispatch(setAccessToken(response?.data?.accessToken));
       // localStorage.setItem('refreshToken', response?.data?.refreshToken);
       // document.cookie = `refreshToken=${response?.data?.refreshToken}; path=/; secure; samesite=strict`;
-      router.push("/");
+      router.push("/inbox");
     } catch (error) {
       console.error("Login error:", error);
     }

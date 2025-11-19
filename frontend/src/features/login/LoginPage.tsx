@@ -2,6 +2,7 @@
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { Form, Input, Typography, Divider } from "antd";
 import React from "react";
+import Link from "next/link";
 import { GoogleLogin } from "@react-oauth/google";
 
 import { useLogin } from "./hooks/useLogin";
@@ -73,6 +74,11 @@ const LoginPage: React.FC = () => {
             onError={onGoogleLoginError}
             useOneTap
           />
+        </div>
+        <div style={{ marginTop: 24, textAlign: "center" }}>
+          <Typography.Text>
+            Don't have an account? <Link href="/register">Register</Link>
+          </Typography.Text>
         </div>
       </StyledCard>
     </LoginContainer>

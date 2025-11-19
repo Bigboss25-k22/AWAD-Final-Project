@@ -40,3 +40,18 @@ a {
     color-scheme: dark;
   }
 }
+
+&::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
+&::-webkit-scrollbar-thumb {
+  background-color: rgba(198, 198, 200, 1);
+  border-radius: 4px;
+}
+
+&::-webkit-scrollbar-track {
+  background-color: rgba(242, 242, 242, 1);
+}
