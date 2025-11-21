@@ -43,21 +43,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto) {
-    try {
-      const tokens = await this.loginUseCase.execute(
-        loginDto.email,
-        loginDto.password,
-      );
-      return tokens;
-    } catch (error) {
-      if (error instanceof InvalidCredentialsError) {
-        throw new HttpException(
-          { status: 'error', message: error.message, data: null },
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-      throw error;
-    }
+    return await this.loginUseCase.execute(loginDto.email, loginDto.password);
   }
 
   @Public()
@@ -66,22 +52,11 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   async register(@Body() registerDto: RegisterDto) {
-    try {
-      const user = await this.registerUseCase.execute(
-        registerDto.email,
-        registerDto.password,
-        registerDto.name,
-      );
-      return user;
-    } catch (err) {
-      if (err instanceof EmailAlreadyExistsError) {
-        throw new HttpException(
-          { status: 'error', message: err.message, data: null },
-          HttpStatus.CONFLICT,
-        );
-      }
-      throw err;
-    }
+    return await this.registerUseCase.execute(
+      registerDto.email,
+      registerDto.password,
+      registerDto.name,
+    );
   }
 
   @Public()
@@ -90,20 +65,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Token refreshed' })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refreshToken(@Body() dto: RefreshTokenDto) {
-    try {
-      return await this.refreshTokenUseCase.execute(dto.refreshToken);
-    } catch (err) {
-      // Map Nest HTTP exceptions to consistent response shape
-      if (err instanceof HttpException) {
-        const status = err.getStatus();
-        const message = (err.getResponse() as any)?.message ?? err.message;
-        throw new HttpException(
-          { status: 'error', message, data: null },
-          status,
-        );
-      }
-      throw err;
-    }
+    return await this.refreshTokenUseCase.execute(dto.refreshToken);
   }
 
   @Public()
@@ -111,21 +73,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with Google ID Token' })
   @ApiResponse({ status: 201, description: 'Google login successful' })
   async googleSignIn(@Body() dto: GoogleTokenDto) {
-    try {
-      return await this.googleSignInUseCase.execute(dto.idToken);
-    } catch (err) {
-      if (err instanceof HttpException) {
-        const status = err.getStatus();
-        const message = (err.getResponse() as any)?.message ?? err.message;
-        throw new HttpException(
-          { status: 'error', message, data: null },
-          status,
-        );
-      }
-      throw new HttpException(
-        { status: 'error', message: err.message ?? 'Unauthorized', data: null },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
+    return await this.googleSignInUseCase.execute(dto.idToken);
   }
 }
