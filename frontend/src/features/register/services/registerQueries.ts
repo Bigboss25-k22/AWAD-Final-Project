@@ -1,5 +1,5 @@
 import { API_PATH } from '@/constants/apis.constant';
-import axiosClient from '@/services/api/apiClient';
+import axiosClient from '@/services/apis/apiClient';
 import { AxiosResponse } from 'axios';
 import { IRegisterParams } from '../interfaces/register.interface';
 
