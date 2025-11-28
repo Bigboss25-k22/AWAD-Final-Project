@@ -12,7 +12,6 @@ import {
 import { Button, Input, Menu } from 'antd';
 import { IEmail, IMailbox } from '../interfaces/mailAPI.interface';
 import { StyledSider } from '../styles/InboxPage.style';
-import { valueType } from 'antd/es/statistic/utils';
 
 const { Search } = Input;
 
