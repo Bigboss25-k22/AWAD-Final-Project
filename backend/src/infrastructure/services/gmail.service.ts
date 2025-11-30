@@ -7,6 +7,7 @@ import {
   ListMessagesParams,
   ListMessagesResponse,
   SendMessageParams,
+  ModifyMessageParams,
 } from '../../application/ports/gmail.port';
 
 @Injectable()
@@ -111,6 +112,26 @@ export class GmailServiceImpl implements IGmailService {
     const res = await gmail.users.messages.send({
       userId: 'me',
       requestBody,
+    });
+
+    return res.data as unknown as GmailMessage;
+  }
+
+  async modifyMessage(
+    accessToken: string,
+    userId: string = 'me',
+    messageId: string,
+    params: ModifyMessageParams,
+  ): Promise<GmailMessage> {
+    const gmail = this.getClient(accessToken);
+
+    const res = await gmail.users.messages.modify({
+      userId,
+      id: messageId,
+      requestBody: {
+        addLabelIds: params.addLabelIds,
+        removeLabelIds: params.removeLabelIds,
+      },
     });
 
     return res.data as unknown as GmailMessage;

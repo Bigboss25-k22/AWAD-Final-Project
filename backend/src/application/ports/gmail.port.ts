@@ -50,6 +50,11 @@ export interface SendMessageParams {
   replyToMessageId?: string;  // reply to a specific message
 }
 
+export interface ModifyMessageParams {
+  addLabelIds?: string[];
+  removeLabelIds?: string[];
+}
+
 export abstract class IGmailService {
   abstract getProfile(accessToken: string): Promise<any>;
 
@@ -72,5 +77,12 @@ export abstract class IGmailService {
   abstract sendMessage(
     accessToken: string,
     params: SendMessageParams,
+  ): Promise<GmailMessage>;
+
+  abstract modifyMessage(
+    accessToken: string,
+    userId: string,
+    messageId: string,
+    params: ModifyMessageParams,
   ): Promise<GmailMessage>;
 }

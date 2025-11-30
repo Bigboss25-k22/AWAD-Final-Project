@@ -1,27 +1,14 @@
-import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { IGmailService, SendMessageParams } from '../../ports/gmail.port';
-import { IEncryptionService } from '../../ports/encryption.port';
+import { BaseGmailUseCase } from './base-gmail.use-case';
 
 export interface ReplyEmailParams {
   body: string;
   includeOriginal?: boolean;
 }
 
-export class ReplyEmailUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly gmailService: IGmailService,
-    private readonly encryptionService: IEncryptionService,
-  ) {}
-
+export class ReplyEmailUseCase extends BaseGmailUseCase {
   async execute(userId: string, messageId: string, params: ReplyEmailParams) {
-
-    const user = await this.userRepository.findById(userId);
-    if (!user || !user.googleAccessToken) {
-      throw new Error('User not found or not linked with Google');
-    }
-
-    const accessToken = this.encryptionService.decrypt(user.googleAccessToken);
+    const accessToken = await this.getAccessToken(userId);
 
     const originalMessage = await this.gmailService.getMessage(
       accessToken,

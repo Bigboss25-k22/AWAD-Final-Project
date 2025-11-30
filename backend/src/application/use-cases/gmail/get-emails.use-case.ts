@@ -1,6 +1,5 @@
-import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { IGmailService, GmailMessage, ListMessagesParams } from '../../ports/gmail.port';
-import { IEncryptionService } from '../../ports/encryption.port';
+import { BaseGmailUseCase } from './base-gmail.use-case';
 
 const SYSTEM_LABELS_MAP: Record<string, string> = {
   inbox: 'INBOX',
@@ -12,25 +11,14 @@ const SYSTEM_LABELS_MAP: Record<string, string> = {
   important: 'IMPORTANT',
 };
 
-export class GetEmailsUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly gmailService: IGmailService,
-    private readonly encryptionService: IEncryptionService,
-  ) {}
-
+export class GetEmailsUseCase extends BaseGmailUseCase {
   async execute(
     userId: string, 
     mailboxId: string = 'INBOX',
     page: number = 1,
     limit: number = 20,
   ) {
-    const user = await this.userRepository.findById(userId);
-    if (!user || !user.googleAccessToken) {
-      throw new Error('User not found or not linked with Google');
-    }
-
-    const accessToken = this.encryptionService.decrypt(user.googleAccessToken);
+    const accessToken = await this.getAccessToken(userId);
 
     // Normalize mailboxId and map to Gmail Label ID
     const normalizedId = mailboxId.toLowerCase();

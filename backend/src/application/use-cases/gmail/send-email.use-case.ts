@@ -1,6 +1,5 @@
-import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { IGmailService, SendMessageParams } from '../../ports/gmail.port';
-import { IEncryptionService } from '../../ports/encryption.port';
+import { BaseGmailUseCase } from './base-gmail.use-case';
 
 export interface SendEmailParams {
   to: string[];
@@ -10,21 +9,9 @@ export interface SendEmailParams {
   bcc?: string[];
 }
 
-export class SendEmailUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly gmailService: IGmailService,
-    private readonly encryptionService: IEncryptionService,
-  ) {}
-
+export class SendEmailUseCase extends BaseGmailUseCase {
   async execute(userId: string, params: SendEmailParams) {
-
-    const user = await this.userRepository.findById(userId);
-    if (!user || !user.googleAccessToken) {
-      throw new Error('User not found or not linked with Google');
-    }
-
-    const accessToken = this.encryptionService.decrypt(user.googleAccessToken);
+    const accessToken = await this.getAccessToken(userId);
 
     const sendParams: SendMessageParams = {
       to: params.to,

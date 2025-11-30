@@ -8,23 +8,28 @@ import {
   Req, 
   Body 
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+  ApiGetMailboxes,
+  ApiGetEmailDetail,
+  ApiGetEmails,
+  ApiSendEmail,
+  ApiReplyEmail,
+  ApiModifyEmail,
+} from '../decorators/swagger/mail.swagger.decorator';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { GetLabelsUseCase } from '../../application/use-cases/gmail/get-labels.use-case';
 import { GetEmailsUseCase } from '../../application/use-cases/gmail/get-emails.use-case';
 import { GetEmailDetailUseCase } from '../../application/use-cases/gmail/get-email-detail.use-case';
 import { SendEmailUseCase } from '../../application/use-cases/gmail/send-email.use-case';
 import { ReplyEmailUseCase } from '../../application/use-cases/gmail/reply-email.use-case';
+import { ModifyEmailUseCase } from '../../application/use-cases/gmail/modify-email.use-case';
 import { SendEmailDto } from '../dtos/request/send-email.dto';
 import { ReplyEmailDto } from '../dtos/request/reply-email.dto';
+import { ModifyEmailDto } from '../dtos/request/modify-email.dto';
 
 @ApiTags('Mail')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('mail')
 export class GmailController {
@@ -34,25 +39,23 @@ export class GmailController {
     private readonly getEmailDetailUseCase: GetEmailDetailUseCase,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly replyEmailUseCase: ReplyEmailUseCase,
+    private readonly modifyEmailUseCase: ModifyEmailUseCase,
   ) {}
 
   @Get('mailboxes')
-  @ApiOperation({ summary: 'Get list of mailboxes (labels)' })
-  @ApiResponse({ status: 200, description: 'List of mailboxes returned' })
+  @ApiGetMailboxes()
   async getMailboxes(@Req() req: any) {
     return await this.getLabelsUseCase.execute(req.user.sub);
   }
 
   @Get('emails/:id')
-  @ApiOperation({ summary: 'Get email detail by ID' })
-  @ApiResponse({ status: 200, description: 'Email detail returned' })
+  @ApiGetEmailDetail()
   async getEmailDetail(@Req() req: any, @Param('id') id: string) {
     return await this.getEmailDetailUseCase.execute(req.user.sub, id);
   }
 
   @Get('mailboxes/:mailboxId/emails')
-  @ApiOperation({ summary: 'Get emails from a mailbox' })
-  @ApiResponse({ status: 200, description: 'List of emails returned' })
+  @ApiGetEmails()
   async getEmails(
     @Req() req: any, 
     @Param('mailboxId') mailboxId: string,
@@ -72,8 +75,7 @@ export class GmailController {
   }
 
   @Post('emails/send')
-  @ApiOperation({ summary: 'Send a new email' })
-  @ApiResponse({ status: 201, description: 'Email sent successfully' })
+  @ApiSendEmail()
   async sendEmail(@Req() req: any, @Body() dto: SendEmailDto) {
     return await this.sendEmailUseCase.execute(req.user.sub, {
       to: dto.to,
@@ -85,8 +87,7 @@ export class GmailController {
   }
 
   @Post('emails/:id/reply')
-  @ApiOperation({ summary: 'Reply to an email' })
-  @ApiResponse({ status: 201, description: 'Reply sent successfully' })
+  @ApiReplyEmail()
   async replyEmail(
     @Req() req: any,
     @Param('id') id: string,
@@ -95,6 +96,20 @@ export class GmailController {
     return await this.replyEmailUseCase.execute(req.user.sub, id, {
       body: dto.body,
       includeOriginal: dto.includeOriginal ?? true,
+    });
+  }
+
+  @Post('emails/:id/modify')
+  @ApiModifyEmail()
+  async modifyEmail(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: ModifyEmailDto,
+  ) {
+    return await this.modifyEmailUseCase.execute(req.user.sub, id, {
+      action: dto.action,
+      addLabelIds: dto.addLabelIds,
+      removeLabelIds: dto.removeLabelIds,
     });
   }
 }

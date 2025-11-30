@@ -1,6 +1,4 @@
-import { IUserRepository } from "src/domain/repositories/user.repository";
-import { IGmailService } from "src/application/ports/gmail.port";
-import { IEncryptionService } from "src/application/ports/encryption.port";
+import { BaseGmailUseCase } from './base-gmail.use-case';
 
 const allowedLabels = [
   'INBOX',
@@ -13,20 +11,9 @@ const allowedLabels = [
   'UNREAD'
 ];
 
-export class GetLabelsUseCase {
-    constructor(
-        private readonly userRepository: IUserRepository,
-        private readonly gmailService: IGmailService,   
-        private readonly encryptionService: IEncryptionService,
-    ) {}
-
-    async execute(userId: string) {
-        const user = await this.userRepository.findById(userId);
-        if (!user || !user.googleAccessToken) {
-            throw new Error('User not found or not linked with Google');
-        }
-
-        const accessToken = this.encryptionService.decrypt(user.googleAccessToken);
+export class GetLabelsUseCase extends BaseGmailUseCase {
+  async execute(userId: string) {
+    const accessToken = await this.getAccessToken(userId);
 
         const labels = await this.gmailService.listLabels(
             accessToken,
