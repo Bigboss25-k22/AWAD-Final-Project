@@ -1,0 +1,72 @@
+import { IUserRepository } from '../../../domain/repositories/user.repository';
+import { IGmailService, SendMessageParams } from '../../ports/gmail.port';
+import { IEncryptionService } from '../../ports/encryption.port';
+
+export interface ReplyEmailParams {
+  body: string;
+  includeOriginal?: boolean;
+}
+
+export class ReplyEmailUseCase {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly gmailService: IGmailService,
+    private readonly encryptionService: IEncryptionService,
+  ) {}
+
+  async execute(userId: string, messageId: string, params: ReplyEmailParams) {
+
+    const user = await this.userRepository.findById(userId);
+    if (!user || !user.googleAccessToken) {
+      throw new Error('User not found or not linked with Google');
+    }
+
+    const accessToken = this.encryptionService.decrypt(user.googleAccessToken);
+
+    const originalMessage = await this.gmailService.getMessage(
+      accessToken,
+      'me',
+      messageId,
+    );
+
+    const headers = originalMessage.payload?.headers || [];
+    const getHeader = (name: string) =>
+      headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())
+        ?.value || '';
+
+    const originalFrom = getHeader('From');
+    const originalSubject = getHeader('Subject');
+    const originalTo = getHeader('To');
+    const messageIdHeader = getHeader('Message-ID');
+
+    let replyBody = params.body;
+    
+    if (params.includeOriginal) {
+      replyBody += `
+        <br><br>
+        <div style="border-left: 2px solid #ccc; padding-left: 10px; color: #666;">
+          <p><strong>On ${getHeader('Date')}, ${originalFrom} wrote:</strong></p>
+          ${originalMessage.snippet}
+        </div>
+      `;
+    }
+
+    const replyParams: SendMessageParams = {
+      to: [originalFrom],
+      subject: originalSubject.startsWith('Re:') 
+        ? originalSubject 
+        : `Re: ${originalSubject}`,
+      body: replyBody,
+      threadId: originalMessage.threadId,
+      replyToMessageId: messageIdHeader,
+    };
+
+    const result = await this.gmailService.sendMessage(accessToken, replyParams);
+
+    return {
+      success: true,
+      messageId: result.id,
+      threadId: result.threadId,
+    };
+  }
+}

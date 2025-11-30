@@ -33,10 +33,10 @@ export class EmailController {
     return this.getEmails.execute(id);
   }
 
-  @Get('emails/:id')
-  @ApiOperation({ summary: 'Get email details' })
-  @ApiResponse({ status: 200, description: 'Email details' })
-  async emailDetail(@Param('id') id: string) {
-    return this.getEmailDetail.execute(id);
-  }
+  // @Get('emails/:id')
+  // @ApiOperation({ summary: 'Get email details' })
+  // @ApiResponse({ status: 200, description: 'Email details' })
+  // async emailDetail(@Param('id') id: string) {
+  //   return this.getEmailDetail.execute(id);
+  // }
 }

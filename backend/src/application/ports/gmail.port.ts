@@ -16,19 +16,61 @@ export interface GmailThread {
   messages: GmailMessage[];
 }
 
+export interface GmailLabel {
+  id: string;
+  name: string;
+  type: string;
+  messageListVisibility?: string;
+  labelListVisibility?: string;
+  messagesTotal?: number;
+  messagesUnread?: number;
+}
+
+export interface ListMessagesParams {
+  userId?: string;
+  labelIds?: string[];
+  query?: string;
+  maxResults?: number;
+  pageToken?: string;
+}
+
+export interface ListMessagesResponse {
+  messages: GmailMessage[];
+  nextPageToken?: string;
+  resultSizeEstimate?: number;
+}
+
+export interface SendMessageParams {
+  to: string[];
+  subject: string;
+  body: string;
+  cc?: string[];
+  bcc?: string[];
+  threadId?: string;  // reply within a thread
+  replyToMessageId?: string;  // reply to a specific message
+}
+
 export abstract class IGmailService {
   abstract getProfile(accessToken: string): Promise<any>;
 
   abstract listMessages(
     accessToken: string,
-    userId: string,
-    query?: string,
-    maxResults?: number,
-  ): Promise<GmailMessage[]>;
+    params: ListMessagesParams,
+  ): Promise<ListMessagesResponse>;
 
   abstract getMessage(
     accessToken: string,
     userId: string,
     messageId: string,
+  ): Promise<GmailMessage>;
+
+  abstract listLabels(
+    accessToken: string,
+    userId: string,
+  ): Promise<GmailLabel[]>;
+
+  abstract sendMessage(
+    accessToken: string,
+    params: SendMessageParams,
   ): Promise<GmailMessage>;
 }

@@ -114,7 +114,7 @@ export class AuthController {
   ) {
     const result = await this.googleOAuthUseCase.exchangeCode(code);
 
-    // Dùng Helper
+    // Using Helper
     CookieHelper.setRefreshToken(res, result.refreshToken);
 
     return { accessToken: result.accessToken, user: result.user };

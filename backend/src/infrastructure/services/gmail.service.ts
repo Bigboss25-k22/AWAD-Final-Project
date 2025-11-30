@@ -3,6 +3,10 @@ import { google } from 'googleapis';
 import {
   IGmailService,
   GmailMessage,
+  GmailLabel,
+  ListMessagesParams,
+  ListMessagesResponse,
+  SendMessageParams,
 } from '../../application/ports/gmail.port';
 
 @Injectable()
@@ -21,29 +25,34 @@ export class GmailServiceImpl implements IGmailService {
 
   async listMessages(
     accessToken: string,
-    userId: string = 'me',
-    query: string = '',
-    maxResults: number = 10,
-  ): Promise<GmailMessage[]> {
+    params: ListMessagesParams,
+  ): Promise<ListMessagesResponse> {
     const gmail = this.getClient(accessToken);
+    const userId = params.userId || 'me';
 
-    // 1. Lấy danh sách ID messages
+    // 1. Lấy danh sách ID messages với pagination
     const res = await gmail.users.messages.list({
       userId,
-      q: query,
-      maxResults,
+      labelIds: params.labelIds,
+      q: params.query,
+      maxResults: params.maxResults || 20,
+      pageToken: params.pageToken, // Token cho trang tiếp theo
     });
 
     const messages = res.data.messages || [];
-    if (messages.length === 0) return [];
+    
+    // 2. Lấy chi tiết từng message song song
+    const details = messages.length > 0 
+      ? await Promise.all(
+          messages.map((msg) => this.getMessage(accessToken, userId, msg.id!)),
+        )
+      : [];
 
-    // 2. Lấy chi tiết từng message (Google API bắt gọi từng cái)
-    // Dùng Promise.all để gọi song song cho nhanh
-    const details = await Promise.all(
-      messages.map((msg) => this.getMessage(accessToken, userId, msg.id!)),
-    );
-
-    return details;
+    return {
+      messages: details,
+      nextPageToken: res.data.nextPageToken ?? undefined,
+      resultSizeEstimate: res.data.resultSizeEstimate ?? undefined,
+    };
   }
 
   async getMessage(
@@ -55,10 +64,85 @@ export class GmailServiceImpl implements IGmailService {
     const res = await gmail.users.messages.get({
       userId,
       id: messageId,
-      format: 'full', // Lấy đầy đủ nội dung
+      format: 'full', 
     });
 
-    // Map dữ liệu từ Google format sang format của ta
     return res.data as unknown as GmailMessage;
+  }
+
+  async listLabels(
+    accessToken: string,
+    userId: string = 'me',
+  ): Promise<GmailLabel[]> {
+    const gmail = this.getClient(accessToken);
+    
+    const res = await gmail.users.labels.list({ 
+      userId 
+    });
+    
+    return (res.data.labels || []) as GmailLabel[];
+  }
+
+  async sendMessage(
+    accessToken: string,
+    params: SendMessageParams,
+  ): Promise<GmailMessage> {
+    const gmail = this.getClient(accessToken);
+
+    // Tạo email theo RFC 2822 format
+    const email = this.createEmailMessage(params);
+
+    // Encode base64url
+    const encodedMessage = Buffer.from(email)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const requestBody: any = {
+      raw: encodedMessage,
+    };
+
+    // Nếu là reply, thêm threadId
+    if (params.threadId) {
+      requestBody.threadId = params.threadId;
+    }
+
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody,
+    });
+
+    return res.data as unknown as GmailMessage;
+  }
+
+  private createEmailMessage(params: SendMessageParams): string {
+    const lines: string[] = [];
+
+    // Headers
+    lines.push(`To: ${params.to.join(', ')}`);
+    
+    if (params.cc?.length) {
+      lines.push(`Cc: ${params.cc.join(', ')}`);
+    }
+    
+    if (params.bcc?.length) {
+      lines.push(`Bcc: ${params.bcc.join(', ')}`);
+    }
+    
+    lines.push(`Subject: ${params.subject}`);
+    
+    // Nếu là reply, thêm header In-Reply-To và References
+    if (params.replyToMessageId) {
+      lines.push(`In-Reply-To: <${params.replyToMessageId}>`);
+      lines.push(`References: <${params.replyToMessageId}>`);
+    }
+    
+    lines.push('MIME-Version: 1.0');
+    lines.push('Content-Type: text/html; charset=UTF-8');
+    lines.push('');
+    lines.push(params.body);
+
+    return lines.join('\r\n');
   }
 }
