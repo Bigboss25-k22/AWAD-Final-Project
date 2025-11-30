@@ -11,6 +11,10 @@ import { IUserRepository } from '../domain/repositories/user.repository';
 import { IEmailRepository } from '../domain/repositories/email.repository';
 import { IPasswordService } from '../application/ports/password.port';
 import { ITokenService } from '../application/ports/token.port';
+import { EncryptionServiceImpl } from './services/encryption.service';
+import { IEncryptionService } from '../application/ports/encryption.port';
+import { GmailServiceImpl } from './services/gmail.service';
+import { IGmailService } from 'src/application/ports/gmail.port';
 
 @Module({
   imports: [
@@ -42,13 +46,23 @@ import { ITokenService } from '../application/ports/token.port';
       provide: ITokenService,
       useClass: TokenServiceImpl,
     },
+    {
+      provide: IEncryptionService,
+      useClass: EncryptionServiceImpl,
+    },
+    {
+      provide: IGmailService,
+      useClass: GmailServiceImpl,
+    },
   ],
   exports: [
     PrismaService,
+    IEncryptionService,
     IUserRepository,
     IEmailRepository,
     IPasswordService,
     ITokenService,
+    IGmailService,
     JwtModule, // Export JwtModule so PresentationModule can use it (via AuthGuard)
   ],
 })

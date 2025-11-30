@@ -1,106 +1,70 @@
-import { useAppDispatch } from '@/redux/hooks';
-import { setAccessToken } from '@/redux/slices/authSlice';
-import { App, Form } from 'antd';
-import { useRouter } from 'next/navigation';
-import { LoginFormValues } from '../interfaces/login.interface';
-import { useMutationLogin, useMutationGoogleLogin } from './loginAPIs';
-import { CredentialResponse } from '@react-oauth/google';
+import { useAppDispatch } from "@/redux/hooks";
+import { setAccessToken } from "@/redux/slices/authSlice";
+import apiClient from "@/services/apis/apiClient";
+import { App, Form } from "antd";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useMutationLogin } from "./loginAPIs";
+import { ILoginParams } from "../interfaces/login.interface";
 
 export const useLogin = () => {
-  const { notification } = App.useApp();
+  const { notification, message } = App.useApp();
   const [form] = Form.useForm();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const { mutateAsync: login, isPending: isLoading } = useMutationLogin({
+  const { mutateAsync: login, isPending: isLoginLoading } = useMutationLogin({
     onSuccess: () => {
       notification.success({
-        message: 'Login Successful',
-        description: 'You have successfully logged in.',
+        message: "Login Successful",
+        description: "You have successfully logged in.",
       });
     },
     onError: (error) => {
       notification.error({
-        message: 'Login Failed',
+        message: "Login Failed",
         description:
-          (error as Error).message || 'An error occurred during login.',
+          (error as Error).message || "An error occurred during login.",
       });
     },
   });
 
-  const { mutateAsync: googleLogin, isPending: isGoogleLoading } =
-    useMutationGoogleLogin({
-      onSuccess: (response) => {
-        dispatch(setAccessToken(response?.data?.accessToken));
-        notification.success({
-          message: 'Login Successful',
-          description: 'You have successfully logged in with Google.',
-        });
-        router.push('/inbox');
-      },
-      onError: (error) => {
-        notification.error({
-          message: 'Google Login Failed',
-          description:
-            (error as Error).message ||
-            'An error occurred during Google login.',
-        });
-      },
-    });
-
-  // const onFinish = async (values: LoginFormValues) => {
-  //   try {
-  //     const response = await login(values);
-  //     // localStorage.setItem('accessToken', response?.data?.accessToken);
-  //     dispatch(setAccessToken(response?.data?.accessToken));
-  //     // localStorage.setItem('refreshToken', response?.data?.refreshToken);
-  //     // document.cookie = `refreshToken=${response?.data?.refreshToken}; path=/; secure; samesite=strict`;
-  //   } catch (error) {
-  //     console.error('Login error:', error);
-  //   } finally {
-  //     router.push('/');
-  //   }
-  // };
-
-  const onFinish = async (values: LoginFormValues) => {
+  const onFinish = async (values: ILoginParams) => {
     try {
       const response = await login(values);
-      // localStorage.setItem('accessToken', response?.data?.accessToken);
       dispatch(setAccessToken(response?.data?.accessToken));
-      // localStorage.setItem('refreshToken', response?.data?.refreshToken);
-      // document.cookie = `refreshToken=${response?.data?.refreshToken}; path=/; secure; samesite=strict`;
-      router.push('/inbox');
+      router.push("/inbox");
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
-  const onGoogleLoginSuccess = async (
-    credentialResponse: CredentialResponse,
-  ) => {
-    if (credentialResponse.credential) {
-      try {
-        await googleLogin(credentialResponse.credential);
-      } catch (error) {
-        console.error('Google login error:', error);
+  const handleGoogleLogin = async () => {
+    try {
+      setIsGoogleLoading(true);
+      // Call Backend API to get Google Consent URL
+      const response = await apiClient.get("/auth/google/url");
+      const { url } = response.data;
+
+      if (url) {
+        // Redirect browser to Google
+        window.location.href = url;
+      } else {
+        message.error("Failed to get authentication URL");
       }
-    } else {
-      onGoogleLoginError();
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      message.error("Could not connect to Google login service");
+    } finally {
+      setIsGoogleLoading(false);
     }
-  };
-
-  const onGoogleLoginError = () => {
-    notification.error({
-      message: 'Google Login Failed',
-      description: 'Could not get credential from Google.',
-    });
   };
 
   return {
     form,
     onFinish,
-    isLoading: isLoading || isGoogleLoading,
-    onGoogleLoginSuccess,
-    onGoogleLoginError,
+    isLoading: isLoginLoading || isGoogleLoading,
+    handleGoogleLogin,
   };
 };

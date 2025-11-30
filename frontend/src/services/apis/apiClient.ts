@@ -2,9 +2,14 @@ import { API_PATH } from "@/constants/apis.constant";
 import { notification } from "antd";
 import axios from "axios";
 import { store } from "@/redux/store";
+import { setAccessToken } from "@/redux/slices/authSlice";
 
 const axiosClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_END_POINT,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true, // Enable cookies
   // timeout: 10000,
 });
 
@@ -19,23 +24,44 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// // Response interceptor — unwrap data
+// Response interceptor — unwrap data
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error?.response?.status === 401) {
-      const originalRequest = error.config;
+    const originalRequest = error.config;
+
+    // Check if error is 401 and we haven't retried yet
+    if (error?.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       try {
-        await axiosClient.post<void>(
+        // Call refresh token endpoint (Backend reads refresh token from HttpOnly cookie)
+        const refreshResponse = await axiosClient.post<{ accessToken: string }>(
           API_PATH.AUTHENTICATE.REFRESH_TOKEN.API_PATH
         );
+
+        const { accessToken } = refreshResponse.data;
+
+        // Update Redux with new access token
+        store.dispatch(setAccessToken(accessToken));
+
+        // Update header for original request and retry
+        axiosClient.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${accessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+
         return axiosClient(originalRequest);
       } catch (err) {
+        console.error("Refresh Token Failed:", err); // Add log for debugging
         notification.error({
           message: "Session Expired",
           description: "Your session has expired. Please log in again.",
         });
+        // Clear auth state
+        store.dispatch(setAccessToken(null));
         window.location.href = "/login";
+        return Promise.reject(err);
       }
     }
 

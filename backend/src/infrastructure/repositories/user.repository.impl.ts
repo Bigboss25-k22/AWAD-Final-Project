@@ -40,4 +40,9 @@ export class UserRepositoryImpl implements IUserRepository {
   async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
     await this.prisma.user.update({ where: { id }, data: { refreshToken } });
   }
+
+  async update(user: User): Promise<void> {
+    const data = UserMapper.toPersistence(user);
+    await this.prisma.user.update({ where: { id: data.id }, data });
+  }
 }

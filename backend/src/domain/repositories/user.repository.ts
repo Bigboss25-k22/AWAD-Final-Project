@@ -5,4 +5,5 @@ export abstract class IUserRepository {
   abstract findById(id: string): Promise<User | null>;
   abstract create(user: User): Promise<User>;
   abstract updateRefreshToken(id: string, refreshToken: string): Promise<void>;
+  abstract update(user: User): Promise<void>;
 }
