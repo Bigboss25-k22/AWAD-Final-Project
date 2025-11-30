@@ -1,5 +1,5 @@
 'use client';
-import { Button, Checkbox, Dropdown, Menu, Typography } from 'antd';
+import { Button, Checkbox, Pagination, Tooltip, Typography } from 'antd';
 import { IEmail } from '../interfaces/mailAPI.interface';
 import {
   EmailItem,
@@ -11,11 +11,8 @@ import {
 } from '../styles/InboxPage.style';
 
 import {
-  CheckOutlined,
-  CheckSquareOutlined,
   DeleteOutlined,
   MailOutlined,
-  MoreOutlined,
   PaperClipOutlined,
   ReloadOutlined,
   StarFilled,
@@ -38,21 +35,6 @@ export const EmailListPanel: React.FC<{
   handleCheckboxChange,
   handleEmailClick,
 }) => {
-  const menu = (
-    <Menu>
-      <Menu.Item key='markAsRead' icon={<CheckOutlined />}>
-        Mark as read
-      </Menu.Item>
-      <Menu.Item key='markAsUnread' icon={<MailOutlined />}>
-        Mark as unread
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key='delete' danger icon={<DeleteOutlined />}>
-        Delete
-      </Menu.Item>
-    </Menu>
-  );
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -78,28 +60,32 @@ export const EmailListPanel: React.FC<{
   return (
     <EmailList show={showEmailList}>
       <Toolbar>
-        <Checkbox
-          onChange={(e) => handleSelectAll(e.target.checked)}
-          checked={
-            checkedEmails.size > 0 &&
-            checkedEmails.size === filteredEmails?.length
-          }
-          indeterminate={
-            filteredEmails &&
-            checkedEmails.size > 0 &&
-            checkedEmails.size < filteredEmails?.length
-          }
-        />
-        <Button type='text' icon={<ReloadOutlined />} />
-        <Button type='text' icon={<DeleteOutlined />} />
-        <Button type='text' icon={<MailOutlined />} />
-        <Dropdown overlay={menu} trigger={['click']}>
-          <Button type='text' icon={<MoreOutlined />} />
-        </Dropdown>
+        <Tooltip title='Select all'>
+          <Checkbox
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            checked={
+              checkedEmails.size > 0 &&
+              checkedEmails.size === filteredEmails?.length
+            }
+            indeterminate={
+              filteredEmails &&
+              checkedEmails.size > 0 &&
+              checkedEmails.size < filteredEmails?.length
+            }
+          />
+        </Tooltip>
+        <Tooltip title='Refresh'>
+          <Button type='text' icon={<ReloadOutlined />} />
+        </Tooltip>
+        <Tooltip title='Delete selected'>
+          <Button type='text' icon={<DeleteOutlined />} />
+        </Tooltip>
+        <Tooltip title='Mark as read'>
+          <Button type='text' icon={<MailOutlined />} />
+        </Tooltip>
         <div style={{ flex: 1 }} />
-        <Button type='text' icon={<CheckSquareOutlined />} />
       </Toolbar>
-      <div style={{ height: 'calc(100vh - 112px)', overflowY: 'auto' }}>
+      <div style={{ height: 'calc(100vh - 150px)', overflowY: 'auto' }}>
         {filteredEmails?.map((email) => (
           <EmailItem
             key={email.id}
@@ -128,21 +114,23 @@ export const EmailListPanel: React.FC<{
                     handleCheckboxChange(email.id, e.target.checked);
                   }}
                 />
-                <Button
-                  type='text'
-                  icon={
-                    email.isStarred ? (
-                      <StarFilled style={{ color: '#faad14' }} />
-                    ) : (
-                      <StarO />
-                    )
-                  }
-                  style={{ marginRight: 8 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Toggle star status
-                  }}
-                />
+                <Tooltip title={email.isStarred ? 'Unstar' : 'Star'}>
+                  <Button
+                    type='text'
+                    icon={
+                      email.isStarred ? (
+                        <StarFilled style={{ color: '#faad14' }} />
+                      ) : (
+                        <StarO />
+                      )
+                    }
+                    style={{ marginRight: 8 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Toggle star status
+                    }}
+                  />
+                </Tooltip>
               </div>
               <EmailPreview>
                 <div
@@ -185,6 +173,14 @@ export const EmailListPanel: React.FC<{
           </EmailItem>
         ))}
       </div>
+
+      <Pagination
+        size='small'
+        total={filteredEmails?.length || 0}
+        pageSize={20}
+        showSizeChanger={false}
+        style={{ padding: '8px', textAlign: 'center' }}
+      />
     </EmailList>
   );
 };

@@ -2,7 +2,7 @@
 
 import { IEmail } from '../interfaces/mailAPI.interface';
 import { EmailDetail } from '../styles/InboxPage.style';
-import { Button, Card, Typography } from 'antd';
+import { Button, Card, Tooltip, Typography } from 'antd';
 import {
   DeleteOutlined,
   DownloadOutlined,
@@ -39,10 +39,18 @@ export const EmailDetailPanel: React.FC<{
                 <Text type='secondary' style={{ marginRight: 16 }}>
                   {new Date(email.timestamp).toLocaleString()}
                 </Text>
-                <Button type='text' icon={<StarOutlined />} />
-                <Button type='text' icon={<ForwardOutlined />} />
-                <Button type='text' icon={<SendOutlined />} />
-                <Button type='text' icon={<DeleteOutlined />} />
+                <Tooltip title="Toggle star">
+                  <Button type='text' icon={<StarOutlined />} />
+                </Tooltip>
+                <Tooltip title="Forward">
+                  <Button type='text' icon={<ForwardOutlined />} />
+                </Tooltip>
+                <Tooltip title="Reply">
+                  <Button type='text' icon={<SendOutlined />} />
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <Button type='text' icon={<DeleteOutlined />} />
+                </Tooltip>
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@ import {
   getListMailBoxes,
   modifyEmailById,
   replyEmailById,
+  sendEmail,
   streamAttachmentById,
 } from '../services/mailQueries';
 import { UseMutationLoginOptions } from '@/interfaces/query';
@@ -37,6 +38,19 @@ export const useGetEmailDetailById = (id: string) => {
     queryFn: () => getEmailDetailById(id),
     select: (response) => response.data,
     enabled: !!id,
+  });
+};
+
+// Send email
+export const useMutationSendEmail = ({
+  onSuccess,
+  onError,
+}: UseMutationLoginOptions) => {
+  return useMutation({
+    mutationKey: [API_PATH.EMAIL.SEND_EMAIL.API_KEY],
+    mutationFn: () => sendEmail(),
+    onSuccess,
+    onError,
   });
 };
 

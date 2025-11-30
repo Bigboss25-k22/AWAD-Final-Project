@@ -1,4 +1,5 @@
 import { API_PATH } from '@/constants/apis.constant';
+import { serializedParamsQuery } from '@/helpers/common.helper';
 import axiosClient from '@/services/apis/apiClient';
 import { AxiosResponse } from 'axios';
 import {
@@ -6,7 +7,6 @@ import {
   IEmailParams,
   IMailbox,
 } from '../interfaces/mailAPI.interface';
-import { serializedParamsQuery } from '@/helpers/common.helper';
 
 // Get list mail boxes
 export function getListMailBoxes(): Promise<AxiosResponse<IMailbox[]>> {

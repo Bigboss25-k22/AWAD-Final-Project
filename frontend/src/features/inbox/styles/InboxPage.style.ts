@@ -31,7 +31,7 @@ export const EmailList = styled.div<EmailListProps>`
   flex: 1;
 
   overflow-y: none;
-  border-right: 1px solid #f0f0f0;
+  border-right: 2px solid #d9d9d9;
   @media (max-width: 992px) {
     display: ${({ show }) => (show ? 'block' : 'none')};
     width: 100%;
