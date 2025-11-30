@@ -48,7 +48,7 @@ const InboxPage: React.FC = () => {
     }
   };
 
-  const filteredEmails = emails?.filter(
+  const filteredEmails = emails?.emails?.filter(
     (email: IEmail) =>
       email.mailboxId === selectedMailbox &&
       (email.subject.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -56,7 +56,7 @@ const InboxPage: React.FC = () => {
         email.preview.toLowerCase().includes(searchText.toLowerCase())),
   );
 
-  const selectedEmailData = emails?.find(
+  const selectedEmailData = emails?.emails?.find(
     (email: IEmail) => email.id === selectedEmail,
   );
 
@@ -82,7 +82,7 @@ const InboxPage: React.FC = () => {
         selectedMailbox={selectedMailbox}
         setSelectedMailbox={setSelectedMailbox}
         mailboxes={mailboxes || []}
-        emails={emails || []}
+        emails={emails?.emails || []}
         searchText={searchText}
         setSearchText={setSearchText}
       />

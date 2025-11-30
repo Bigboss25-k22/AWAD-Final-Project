@@ -20,10 +20,14 @@ export const useGetMailBoxes = () => {
 };
 
 // Hook to get list of emails by mail box id
-export const useGetEmailsByMailBoxId = (id: string) => {
+export const useGetEmailsByMailBoxId = (
+  id: string,
+  page?: number,
+  limit?: number,
+) => {
   return useQuery({
-    queryKey: [API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_KEY, id],
-    queryFn: () => getListEmailsByMailBoxId(id),
+    queryKey: [API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_KEY, id, page, limit],
+    queryFn: () => getListEmailsByMailBoxId(id, page, limit),
     select: (response) => response.data,
     enabled: !!id,
   });
