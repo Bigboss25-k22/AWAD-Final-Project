@@ -1,4 +1,4 @@
-import { IGmailService, SendMessageParams } from '../../ports/gmail.port';
+import { IGmailService, SendMessageParams, EmailAttachment } from '../../ports/gmail.port';
 import { BaseGmailUseCase } from './base-gmail.use-case';
 
 export interface SendEmailParams {
@@ -7,6 +7,7 @@ export interface SendEmailParams {
   body: string;
   cc?: string[];
   bcc?: string[];
+  attachments?: EmailAttachment[];
 }
 
 export class SendEmailUseCase extends BaseGmailUseCase {
@@ -19,6 +20,7 @@ export class SendEmailUseCase extends BaseGmailUseCase {
       body: params.body,
       cc: params.cc,
       bcc: params.bcc,
+      attachments: params.attachments,
     };
 
     const result = await this.gmailService.sendMessage(accessToken, sendParams);

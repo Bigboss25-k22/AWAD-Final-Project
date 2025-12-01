@@ -1,9 +1,13 @@
-import { IGmailService, SendMessageParams } from '../../ports/gmail.port';
+import { IGmailService, SendMessageParams, EmailAttachment } from '../../ports/gmail.port';
 import { BaseGmailUseCase } from './base-gmail.use-case';
 
 export interface ReplyEmailParams {
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
   body: string;
   includeOriginal?: boolean;
+  attachments?: EmailAttachment[];
 }
 
 export class ReplyEmailUseCase extends BaseGmailUseCase {
@@ -39,13 +43,16 @@ export class ReplyEmailUseCase extends BaseGmailUseCase {
     }
 
     const replyParams: SendMessageParams = {
-      to: [originalFrom],
+      to: params.to || [originalFrom],
+      cc: params.cc,
+      bcc: params.bcc,
       subject: originalSubject.startsWith('Re:') 
         ? originalSubject 
         : `Re: ${originalSubject}`,
       body: replyBody,
       threadId: originalMessage.threadId,
       replyToMessageId: messageIdHeader,
+      attachments: params.attachments,
     };
 
     const result = await this.gmailService.sendMessage(accessToken, replyParams);

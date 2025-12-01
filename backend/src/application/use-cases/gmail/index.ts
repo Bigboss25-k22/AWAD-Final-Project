@@ -8,6 +8,7 @@ import { IEncryptionService } from '../../ports/encryption.port';
 import { SendEmailUseCase } from './send-email.use-case';
 import { ReplyEmailUseCase } from './reply-email.use-case';
 import { ModifyEmailUseCase } from './modify-email.use-case';
+import { GetAttachmentUseCase } from './get-attachment.use-case';
 
 export const GmailUseCaseProviders = [
   {
@@ -73,6 +74,15 @@ export const GmailUseCaseProviders = [
     ) => new ModifyEmailUseCase(userRepo, gmailService, encryptionService),
     inject: [IUserRepository, IGmailService, IEncryptionService],
   },
+  {
+    provide: GetAttachmentUseCase,
+    useFactory: (
+      userRepo: IUserRepository,
+      gmailService: IGmailService,
+      encryptionService: IEncryptionService,
+    ) => new GetAttachmentUseCase(userRepo, gmailService, encryptionService),
+    inject: [IUserRepository, IGmailService, IEncryptionService],
+  },
 ];
 
 export const GmailUseCases = [
@@ -83,4 +93,5 @@ export const GmailUseCases = [
   SendEmailUseCase,
   ReplyEmailUseCase,
   ModifyEmailUseCase,
+  GetAttachmentUseCase,
 ];

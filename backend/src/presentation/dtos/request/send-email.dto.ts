@@ -46,4 +46,37 @@ export class SendEmailDto {
   @IsArray()
   @IsEmail({}, { each: true })
   bcc?: string[];
+
+  @ApiProperty({ 
+    description: 'Upload files directly (for Swagger UI)',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary'
+    }
+  })
+  @IsOptional()
+  files?: any[];
+
+  @ApiProperty({ 
+    description: 'File attachments (base64 encoded) - use this when sending JSON',
+    required: false,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        filename: { type: 'string', example: 'document.pdf' },
+        content: { type: 'string', example: 'JVBERi0xLjQK...' },
+        mimeType: { type: 'string', example: 'application/pdf' }
+      }
+    }
+  })
+  @IsOptional()
+  @IsArray()
+  attachments?: Array<{
+    filename: string;
+    content: string;
+    mimeType: string;
+  }>;
 }

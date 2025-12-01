@@ -40,6 +40,12 @@ export interface ListMessagesResponse {
   resultSizeEstimate?: number;
 }
 
+export interface EmailAttachment {
+  filename: string;
+  content: string;  // base64 encoded content
+  mimeType: string;
+}
+
 export interface SendMessageParams {
   to: string[];
   subject: string;
@@ -48,6 +54,7 @@ export interface SendMessageParams {
   bcc?: string[];
   threadId?: string;  // reply within a thread
   replyToMessageId?: string;  // reply to a specific message
+  attachments?: EmailAttachment[];  // file attachments
 }
 
 export interface ModifyMessageParams {
@@ -85,4 +92,11 @@ export abstract class IGmailService {
     messageId: string,
     params: ModifyMessageParams,
   ): Promise<GmailMessage>;
+
+  abstract getAttachment(
+    accessToken: string,
+    messageId: string,
+    attachmentId: string,
+    userId?: string,
+  ): Promise<{ data: Buffer; mimeType: string; filename: string }>;
 }

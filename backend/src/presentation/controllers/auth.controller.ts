@@ -50,18 +50,22 @@ export class AuthController {
   @Post('login')
   @ApiLogin()
   async login(@Body() loginDto: LoginDto) {
-    return await this.loginUseCase.execute(loginDto.email, loginDto.password);
+    const result = await this.loginUseCase.execute(loginDto.email, loginDto.password);
+    
+    return result;
   }
 
   @Public()
   @Post('register')
   @ApiRegister()
   async register(@Body() registerDto: RegisterDto) {
-    return await this.registerUseCase.execute(
+    const result = await this.registerUseCase.execute(
       registerDto.email,
       registerDto.password,
       registerDto.name,
     );
+    
+    return result;
   }
 
   @Public()
@@ -102,6 +106,11 @@ export class AuthController {
 
     // Using Helper
     CookieHelper.setRefreshToken(res, result.refreshToken);
+
+    console.log('=== Google OAuth Callback Success ===');
+    console.log('Access Token:', result.accessToken);
+    console.log('User:', result.user.email);
+    console.log('====================================');
 
     return { accessToken: result.accessToken, user: result.user };
   }

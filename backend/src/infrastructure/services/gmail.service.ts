@@ -31,18 +31,16 @@ export class GmailServiceImpl implements IGmailService {
     const gmail = this.getClient(accessToken);
     const userId = params.userId || 'me';
 
-    // 1. Lấy danh sách ID messages với pagination
     const res = await gmail.users.messages.list({
       userId,
       labelIds: params.labelIds,
       q: params.query,
       maxResults: params.maxResults || 20,
-      pageToken: params.pageToken, // Token cho trang tiếp theo
+      pageToken: params.pageToken, 
     });
 
     const messages = res.data.messages || [];
     
-    // 2. Lấy chi tiết từng message song song
     const details = messages.length > 0 
       ? await Promise.all(
           messages.map((msg) => this.getMessage(accessToken, userId, msg.id!)),
@@ -90,7 +88,6 @@ export class GmailServiceImpl implements IGmailService {
   ): Promise<GmailMessage> {
     const gmail = this.getClient(accessToken);
 
-    // Tạo email theo RFC 2822 format
     const email = this.createEmailMessage(params);
 
     // Encode base64url
@@ -104,7 +101,6 @@ export class GmailServiceImpl implements IGmailService {
       raw: encodedMessage,
     };
 
-    // Nếu là reply, thêm threadId
     if (params.threadId) {
       requestBody.threadId = params.threadId;
     }
@@ -137,10 +133,60 @@ export class GmailServiceImpl implements IGmailService {
     return res.data as unknown as GmailMessage;
   }
 
+  async getAttachment(
+    accessToken: string,
+    messageId: string,
+    attachmentId: string,
+    userId: string = 'me',
+  ): Promise<{ data: Buffer; mimeType: string; filename: string }> {
+    const gmail = this.getClient(accessToken);
+
+    const attachmentRes = await gmail.users.messages.attachments.get({
+      userId,
+      messageId,
+      id: attachmentId,
+    });
+
+    const messageRes = await gmail.users.messages.get({
+      userId,
+      id: messageId,
+      format: 'full',
+    });
+
+    let filename = 'attachment';
+    let mimeType = 'application/octet-stream';
+
+    const findAttachment = (parts: any[]): void => {
+      for (const part of parts) {
+        if (part.body?.attachmentId === attachmentId) {
+          filename = part.filename || filename;
+          mimeType = part.mimeType || mimeType;
+          return;
+        }
+        if (part.parts) {
+          findAttachment(part.parts);
+        }
+      }
+    };
+
+    if (messageRes.data.payload?.parts) {
+      findAttachment(messageRes.data.payload.parts);
+    }
+
+    const data = attachmentRes.data.data;
+    if (!data) {
+      throw new Error('Attachment data not found');
+    }
+
+    const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+    const buffer = Buffer.from(base64, 'base64');
+
+    return { data: buffer, mimeType, filename };
+  }
+
   private createEmailMessage(params: SendMessageParams): string {
     const lines: string[] = [];
 
-    // Headers
     lines.push(`To: ${params.to.join(', ')}`);
     
     if (params.cc?.length) {
@@ -153,16 +199,49 @@ export class GmailServiceImpl implements IGmailService {
     
     lines.push(`Subject: ${params.subject}`);
     
-    // Nếu là reply, thêm header In-Reply-To và References
     if (params.replyToMessageId) {
       lines.push(`In-Reply-To: <${params.replyToMessageId}>`);
       lines.push(`References: <${params.replyToMessageId}>`);
     }
     
     lines.push('MIME-Version: 1.0');
-    lines.push('Content-Type: text/html; charset=UTF-8');
-    lines.push('');
-    lines.push(params.body);
+
+    // If has attachments, create multipart/mixed email
+    if (params.attachments && params.attachments.length > 0) {
+      const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+      
+      lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+      lines.push('');
+      
+      // Body part
+      lines.push(`--${boundary}`);
+      lines.push('Content-Type: text/html; charset=UTF-8');
+      lines.push('Content-Transfer-Encoding: 7bit');
+      lines.push('');
+      lines.push(params.body);
+      lines.push('');
+      
+      // Attachment parts
+      for (const attachment of params.attachments) {
+        lines.push(`--${boundary}`);
+        lines.push(`Content-Type: ${attachment.mimeType}; name="${attachment.filename}"`);
+        lines.push('Content-Transfer-Encoding: base64');
+        lines.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
+        lines.push('');
+        
+        // Split base64 content into 76-character lines (RFC 2045)
+        const base64Lines = attachment.content.match(/.{1,76}/g) || [];
+        lines.push(...base64Lines);
+        lines.push('');
+      }
+      
+      lines.push(`--${boundary}--`);
+    } else {
+      // Simple text/html email without attachments
+      lines.push('Content-Type: text/html; charset=UTF-8');
+      lines.push('');
+      lines.push(params.body);
+    }
 
     return lines.join('\r\n');
   }
