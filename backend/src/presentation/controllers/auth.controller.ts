@@ -4,7 +4,11 @@ import {
   Post,
   HttpException,
   HttpStatus,
+  Res,
+  Get,
+  UseGuards,
 } from '@nestjs/common';
+import { Cookies } from '../decorators/cookies.decorator';
 import { Public } from '../decorators/public.decorator';
 import { LoginUseCase } from '../../application/use-cases/auth/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/auth/refresh-token.use-case';
@@ -16,14 +20,19 @@ import { GoogleTokenDto } from '../dtos/request/google-token.dto';
 import { RegisterUseCase } from '../../application/use-cases/auth/register.use-case';
 import { EmailAlreadyExistsError } from '../../application/errors/email-already-exists.error';
 import { InvalidCredentialsError } from '../../application/errors/invalid-credentials.error';
+import { GoogleOAuthUseCase } from '../../application/use-cases/auth/google-oauth.use-case';
+import type { Response, Request } from 'express';
+import { CookieHelper } from '../utils/cookie.helper';
+
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
-@ApiTags('Auth') // Group endpoints under "Auth" tag in Swagger
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -31,6 +40,7 @@ export class AuthController {
     private registerUseCase: RegisterUseCase,
     private refreshTokenUseCase: RefreshTokenUseCase,
     private googleSignInUseCase: GoogleSignInUseCase,
+    private googleOAuthUseCase: GoogleOAuthUseCase,
   ) {}
 
   @Public()
@@ -64,8 +74,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 201, description: 'Token refreshed' })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  async refreshToken(@Body() dto: RefreshTokenDto) {
-    return await this.refreshTokenUseCase.execute(dto.refreshToken);
+  async refreshToken(
+    @Cookies('refreshToken') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.refreshTokenUseCase.execute(token);
+    CookieHelper.setRefreshToken(res, result.refreshToken);
+    return { accessToken: result.accessToken };
   }
 
   @Public()
@@ -74,5 +89,42 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Google login successful' })
   async googleSignIn(@Body() dto: GoogleTokenDto) {
     return await this.googleSignInUseCase.execute(dto.idToken);
+  }
+
+  @Public()
+  @Get('google/url')
+  @ApiOperation({ summary: 'Get Google OAuth consent URL' })
+  @ApiResponse({ status: 200, description: 'Google OAuth consent URL' })
+  getGoogleAuthUrl() {
+    const url = this.googleOAuthUseCase.getConsentUrl();
+    return { url };
+  }
+
+  @Public()
+  @Post('google/callback')
+  @ApiOperation({ summary: 'Exchange Google auth code for tokens' })
+  @ApiResponse({
+    status: 200,
+    description: 'Google auth code exchanged successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid auth code' })
+  async googleCallback(
+    @Body('code') code: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.googleOAuthUseCase.exchangeCode(code);
+
+    CookieHelper.setRefreshToken(res, result.refreshToken);
+
+    return { accessToken: result.accessToken, user: result.user };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @UseGuards(JwtAuthGuard)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    CookieHelper.clearRefreshToken(res);
+    return { message: 'Logged out successfully' };
   }
 }
