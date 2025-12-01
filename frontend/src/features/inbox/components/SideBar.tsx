@@ -9,23 +9,25 @@ import {
   SendOutlined,
   StarOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Menu } from 'antd';
-import { IEmail, IMailbox } from '../interfaces/mailAPI.interface';
-import { StyledSider } from '../styles/InboxPage.style';
+import { Button, Drawer, Input, Menu } from 'antd';
+import React from 'react';
+import { IMailbox } from '../interfaces/mailAPI.interface';
+import { DesktopSider, SidebarContent } from '../styles/InboxPage.style';
 
 const { Search } = Input;
 
-export const Sidebar: React.FC<{
+interface SidebarProps {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
   isMobile: boolean;
   selectedMailbox: string;
   setSelectedMailbox: (v: string) => void;
   mailboxes: IMailbox[];
-  emails: IEmail[];
   searchText: string;
   setSearchText: (v: string) => void;
-}> = ({
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
   collapsed,
   setCollapsed,
   isMobile,
@@ -36,7 +38,7 @@ export const Sidebar: React.FC<{
   setSearchText,
 }) => {
   const items = mailboxes?.map((mailbox) => {
-    let icon;
+    let icon: React.ReactNode;
     switch (mailbox.name.toLowerCase()) {
       case 'inbox':
         icon = <InboxOutlined />;
@@ -63,16 +65,8 @@ export const Sidebar: React.FC<{
     };
   });
 
-  return (
-    <StyledSider
-      key='main-sider'
-      width={250}
-      collapsible
-      collapsed={collapsed}
-      onCollapse={setCollapsed}
-      trigger={null}
-      collapsedWidth={isMobile ? 0 : 80}
-    >
+  const sidebarContent = (
+    <SidebarContent>
       <div style={{ padding: '16px', textAlign: 'center' }}>
         <Button
           type='primary'
@@ -80,7 +74,7 @@ export const Sidebar: React.FC<{
           block
           style={{ marginBottom: '16px' }}
         >
-          {!collapsed && 'Compose'}
+          {(!collapsed || isMobile) && 'Compose'}
         </Button>
         <Search
           placeholder='Search...'
@@ -94,9 +88,43 @@ export const Sidebar: React.FC<{
       <Menu
         mode='inline'
         selectedKeys={[selectedMailbox]}
-        onClick={({ key }) => setSelectedMailbox(key as string)}
+        onClick={({ key }) => {
+          setSelectedMailbox(key as string);
+          if (isMobile) {
+            setCollapsed(true);
+          }
+        }}
         items={items}
       />
-    </StyledSider>
+    </SidebarContent>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer
+        placement='left'
+        open={!collapsed}
+        onClose={() => setCollapsed(true)}
+        width={250}
+        styles={{
+          body: { padding: 0 },
+        }}
+      >
+        {sidebarContent}
+      </Drawer>
+    );
+  }
+
+  return (
+    <DesktopSider
+      width={250}
+      collapsible
+      collapsed={collapsed}
+      onCollapse={setCollapsed}
+      trigger={null}
+      collapsedWidth={80}
+    >
+      {sidebarContent}
+    </DesktopSider>
   );
 };

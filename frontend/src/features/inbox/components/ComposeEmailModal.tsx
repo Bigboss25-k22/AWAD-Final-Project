@@ -498,7 +498,7 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
             contentEditable
             fontFamily={fontFamily}
             fontSize={fontSize}
-            data-placeholder='Nội dung email...'
+            data-placeholder='Compose your email...'
             suppressContentEditableWarning
             onKeyUp={checkFormatState}
             onMouseUp={checkFormatState}

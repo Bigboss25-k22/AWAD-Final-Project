@@ -14,11 +14,10 @@ import { ComposeEmailModal } from './components/ComposeEmailModal';
 
 const InboxPage: React.FC = () => {
   const windowSize = useWindowSize();
-  const isMobile = windowSize.width <= Number(breakpoints.md);
+  const isMobile = windowSize.width <= parseInt(breakpoints.md);
 
   const {
     mailboxes,
-    emails,
     checkedEmails,
     collapsed,
     setCollapsed,
@@ -46,7 +45,6 @@ const InboxPage: React.FC = () => {
           selectedMailbox={selectedMailbox}
           setSelectedMailbox={setSelectedMailbox}
           mailboxes={mailboxes || []}
-          emails={emails || []}
           searchText={searchText}
           setSearchText={setSearchText}
         />
@@ -57,9 +55,10 @@ const InboxPage: React.FC = () => {
             setCollapsed={setCollapsed}
             showEmailList={showEmailList}
             handleBackToList={handleBackToList}
+            isMobile={isMobile}
           />
 
-          <DivEmailList>
+          <DivEmailList $isMobile={isMobile}>
             <EmailListPanel
               showEmailList={showEmailList}
               checkedEmails={checkedEmails}
@@ -77,7 +76,7 @@ const InboxPage: React.FC = () => {
         </Layout>
       </StyledLayout>
       <ComposeEmailModal
-        open={true}
+        open={false}
         onClose={() => {}}
         onSend={(payload) => {
           console.log('Send email payload:', payload);

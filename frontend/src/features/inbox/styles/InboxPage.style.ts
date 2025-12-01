@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import {
   EmailDetailProps,
   EmailItemProps,
-  StyledSiderProps,
 } from '../interfaces/mail.interface';
 
 const { Sider } = Layout;
@@ -12,15 +11,16 @@ export const StyledLayout = styled(Layout)`
   height: 100vh;
 `;
 
-export const StyledSider = styled(Sider)<StyledSiderProps>`
+export const DesktopSider = styled(Sider)`
   background: #fff;
   border-right: 1px solid #f0f0f0;
-  @media (max-width: 768px) {
-    display: ${({ collapsed }) => (collapsed ? 'none' : 'block')};
-    position: absolute;
-    z-index: 10;
-    height: 100%;
-  }
+`;
+
+export const SidebarContent = styled.div`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
 `;
 
 interface EmailListProps {
@@ -38,9 +38,13 @@ export const EmailList = styled.div<EmailListProps>`
   }
 `;
 
-export const DivEmailList = styled.div`
+interface DivEmailListProps {
+  $isMobile?: boolean;
+}
+
+export const DivEmailList = styled.div<DivEmailListProps>`
   overflow-y: auto;
-  height: calc(100% - 56px);
+  height: ${({ $isMobile }) => ($isMobile ? 'calc(100% - 56px)' : '100%')};
   display: flex;
   &::-webkit-scrollbar {
     display: block;
@@ -107,13 +111,10 @@ export const Toolbar = styled.div`
 `;
 
 export const MobileHeader = styled.div`
-  display: none;
+  display: flex;
   padding: 12px 16px;
   background: #fff;
   border-bottom: 1px solid #f0f0f0;
-  @media (max-width: 992px) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+  justify-content: space-between;
+  align-items: center;
 `;
