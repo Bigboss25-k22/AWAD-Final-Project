@@ -10,6 +10,9 @@ export class UserMapper {
       name: prismaUser.name ?? undefined,
       provider: prismaUser.provider as 'local' | 'google',
       refreshToken: prismaUser.refreshToken ?? undefined,
+      googleAccessToken: prismaUser.googleAccessToken ?? undefined,
+      googleRefreshToken: prismaUser.googleRefreshToken ?? undefined,
+      googleTokenExpiry: prismaUser.googleTokenExpiry ?? undefined,
     });
   }
 
@@ -24,6 +27,9 @@ export class UserMapper {
       name: domainUser.name ?? null,
       provider: domainUser.provider,
       refreshToken: domainUser.refreshToken ?? null,
+      googleAccessToken: domainUser.googleAccessToken ?? null,
+      googleRefreshToken: domainUser.googleRefreshToken ?? null,
+      googleTokenExpiry: domainUser.googleTokenExpiry ?? null,
       createdAt: new Date(), // or handle appropriately
       updatedAt: new Date(), // or handle appropriately
     };

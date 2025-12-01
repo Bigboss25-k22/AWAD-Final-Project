@@ -5,7 +5,9 @@ export class User {
   name?: string;
   provider: 'local' | 'google';
   refreshToken?: string;
-
+  googleAccessToken?: string;
+  googleRefreshToken?: string;
+  googleTokenExpiry?: Date;
   constructor(params?: Partial<User>) {
     if (params) {
       this.id = params.id!;
@@ -14,6 +16,9 @@ export class User {
       this.name = params.name;
       this.provider = params.provider!;
       this.refreshToken = params.refreshToken;
+      this.googleAccessToken = params.googleAccessToken;
+      this.googleRefreshToken = params.googleRefreshToken;
+      this.googleTokenExpiry = params.googleTokenExpiry;
     }
   }
 

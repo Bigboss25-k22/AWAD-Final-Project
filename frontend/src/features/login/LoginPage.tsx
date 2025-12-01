@@ -1,9 +1,8 @@
 "use client";
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
-import { Form, Input, Typography, Divider } from "antd";
+import { LockOutlined, MailOutlined, GoogleOutlined } from "@ant-design/icons";
+import { Form, Input, Typography, Divider, Button } from "antd";
 import React from "react";
 import Link from "next/link";
-import { GoogleLogin } from "@react-oauth/google";
 
 import { useLogin } from "./hooks/useLogin";
 import {
@@ -20,8 +19,7 @@ const LoginPage: React.FC = () => {
     form,
     onFinish,
     isLoading,
-    onGoogleLoginSuccess,
-    onGoogleLoginError,
+    handleGoogleLogin,
   } = useLogin();
 
   return (
@@ -65,15 +63,24 @@ const LoginPage: React.FC = () => {
               Login
             </SubmitButton>
           </FormItem>
-          {/* XÓA BỎ FormItem thứ 2 chứa Button từ đây đến dưới */}
         </Form>
         <Divider>OR</Divider>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <GoogleLogin
-            onSuccess={onGoogleLoginSuccess}
-            onError={onGoogleLoginError}
-            useOneTap
-          />
+          <Button
+            size="large"
+            block
+            icon={<GoogleOutlined />}
+            onClick={handleGoogleLogin}
+            loading={isLoading}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontWeight: 500 
+            }}
+          >
+            Sign in with Google
+          </Button>
         </div>
         <div style={{ marginTop: 24, textAlign: "center" }}>
           <Typography.Text>

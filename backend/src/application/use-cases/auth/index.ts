@@ -2,9 +2,11 @@ import { LoginUseCase } from './login.use-case';
 import { RegisterUseCase } from './register.use-case';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
 import { GoogleSignInUseCase } from './google-signin.use-case';
+import { GoogleOAuthUseCase } from './google-oauth.use-case';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { IPasswordService } from '../../ports/password.port';
 import { ITokenService } from '../../ports/token.port';
+import { IEncryptionService } from '../../ports/encryption.port';
 
 export const AuthUseCaseProviders = [
   {
@@ -40,6 +42,21 @@ export const AuthUseCaseProviders = [
     ) => new GoogleSignInUseCase(userRepo, tokenSvc, pwdSvc),
     inject: [IUserRepository, ITokenService, IPasswordService],
   },
+  {
+    provide: GoogleOAuthUseCase,
+    useFactory: (
+      userRepo: IUserRepository,
+      tokenSvc: ITokenService,
+      encryptionSvc: IEncryptionService,
+      pwdSvc: IPasswordService,
+    ) => new GoogleOAuthUseCase(userRepo, tokenSvc, encryptionSvc, pwdSvc),
+    inject: [
+      IUserRepository,
+      ITokenService,
+      IEncryptionService,
+      IPasswordService,
+    ],
+  },
 ];
 
 export const AuthUseCases = [
@@ -47,4 +64,5 @@ export const AuthUseCases = [
   RegisterUseCase,
   RefreshTokenUseCase,
   GoogleSignInUseCase,
+  GoogleOAuthUseCase,
 ];
