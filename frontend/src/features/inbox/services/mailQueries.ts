@@ -1,7 +1,7 @@
 import { API_PATH } from '@/constants/apis.constant';
 import axiosClient from '@/services/apis/apiClient';
 import { AxiosResponse } from 'axios';
-import { IEmail, IMailbox } from '../interfaces/mailAPI.interface';
+import { IEmail, IMailbox, IEmailsResponse } from '../interfaces/mailAPI.interface';
 
 // Get list mail boxes
 export function getListMailBoxes(): Promise<AxiosResponse<IMailbox[]>> {
@@ -13,10 +13,19 @@ export function getListMailBoxes(): Promise<AxiosResponse<IMailbox[]>> {
 // Get list emails by mail box id
 export function getListEmailsByMailBoxId(
   id: string,
-): Promise<AxiosResponse<IEmail[]>> {
-  return axiosClient.get<IEmail[]>(
-    API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_PATH(id),
-  );
+  page?: number,
+  limit?: number,
+): Promise<AxiosResponse<IEmailsResponse>> {
+  const params = new URLSearchParams();
+  if (page) params.append('page', page.toString());
+  if (limit) params.append('limit', limit.toString());
+  
+  const queryString = params.toString();
+  const url = queryString 
+    ? `${API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_PATH(id)}?${queryString}`
+    : API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_PATH(id);
+    
+  return axiosClient.get<IEmailsResponse>(url);
 }
 
 // Get email detail by email id

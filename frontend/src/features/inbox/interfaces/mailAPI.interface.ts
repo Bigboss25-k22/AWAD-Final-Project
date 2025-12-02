@@ -14,3 +14,10 @@ export interface IEmail {
   isStarred?: boolean;
   hasAttachment?: boolean;
 }
+
+export interface IEmailsResponse {
+  emails: IEmail[];
+  page: number;
+  limit: number;
+  total: number;
+}
