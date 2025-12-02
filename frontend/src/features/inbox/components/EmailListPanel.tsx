@@ -2,6 +2,7 @@
 import { Button, Checkbox, Pagination, Tooltip, Typography } from 'antd';
 import { IEmail } from '../interfaces/mailAPI.interface';
 import {
+  DivEmailList,
   EmailItem,
   EmailList,
   EmailPreview,
@@ -18,47 +19,32 @@ import {
   StarFilled,
   StarOutlined as StarO,
 } from '@ant-design/icons';
+import { formatDate } from '@/helpers/day.helper';
 const { Text } = Typography;
 
-export const EmailListPanel: React.FC<{
+interface EmailListPanelProps {
   showEmailList: boolean;
   checkedEmails: Set<string>;
   handleSelectAll: (checked: boolean) => void;
   filteredEmails: IEmail[];
   handleCheckboxChange: (id: string, checked: boolean) => void;
   handleEmailClick: (id: string) => void;
-}> = ({
+  isMobile?: boolean;
+  selectedEmail: IEmail | undefined;
+}
+
+export const EmailListPanel: React.FC<EmailListPanelProps> = ({
   showEmailList,
   checkedEmails,
   handleSelectAll,
   filteredEmails,
   handleCheckboxChange,
   handleEmailClick,
+  isMobile = false,
+  selectedEmail,
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-
-    if (date.toDateString() === now.toDateString()) {
-      return date.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-
-    if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-
-    return date.toLocaleDateString([], {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
-    <EmailList show={showEmailList}>
+    <EmailList $show={showEmailList}>
       <Toolbar>
         <Tooltip title='Select all'>
           <Checkbox
@@ -85,11 +71,11 @@ export const EmailListPanel: React.FC<{
         </Tooltip>
         <div style={{ flex: 1 }} />
       </Toolbar>
-      <div style={{ height: 'calc(100vh - 150px)', overflowY: 'auto' }}>
+      <DivEmailList $isMobile={isMobile}>
         {filteredEmails?.map((email) => (
           <EmailItem
             key={email.id}
-            selected={false}
+            $selected={selectedEmail?.id === email.id}
             onClick={() => handleEmailClick(email.id)}
           >
             <div
@@ -172,7 +158,7 @@ export const EmailListPanel: React.FC<{
             </div>
           </EmailItem>
         ))}
-      </div>
+      </DivEmailList>
 
       <Pagination
         size='small'

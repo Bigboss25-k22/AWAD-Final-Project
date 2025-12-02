@@ -1,14 +1,11 @@
 import { Layout } from 'antd';
 import styled from 'styled-components';
-import {
-  EmailDetailProps,
-  EmailItemProps,
-} from '../interfaces/mail.interface';
 
 const { Sider } = Layout;
 
 export const StyledLayout = styled(Layout)`
   height: 100vh;
+  overflow: hidden !important;
 `;
 
 export const DesktopSider = styled(Sider)`
@@ -23,29 +20,26 @@ export const SidebarContent = styled.div`
   background: #fff;
 `;
 
-interface EmailListProps {
-  show: boolean;
-}
-
-export const EmailList = styled.div<EmailListProps>`
+export const EmailList = styled.div<{ $show: boolean }>`
   flex: 1;
-
   overflow-y: none;
   border-right: 2px solid #d9d9d9;
   @media (max-width: 992px) {
-    display: ${({ show }) => (show ? 'block' : 'none')};
+    display: ${({ $show }) => ($show ? 'block' : 'none')};
     width: 100%;
   }
 `;
 
-interface DivEmailListProps {
-  $isMobile?: boolean;
-}
-
-export const DivEmailList = styled.div<DivEmailListProps>`
+export const DivEmail = styled.div<{ $isMobile?: boolean }>`
   overflow-y: auto;
   height: ${({ $isMobile }) => ($isMobile ? 'calc(100% - 56px)' : '100%')};
   display: flex;
+`;
+
+export const DivEmailList = styled.div<{ $isMobile?: boolean }>`
+  height: ${({ $isMobile }) =>
+    $isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 100px)'};
+  overflow-y: auto;
   &::-webkit-scrollbar {
     display: block;
     width: 6px;
@@ -62,23 +56,23 @@ export const DivEmailList = styled.div<DivEmailListProps>`
   }
 `;
 
-export const EmailDetail = styled.div<EmailDetailProps>`
+export const EmailDetail = styled.div<{ $show: boolean }>`
   flex: 1;
   overflow-y: none;
   padding: 24px;
   @media (max-width: 992px) {
-    display: ${({ show }) => (show ? 'block' : 'none')};
+    display: ${({ $show }) => ($show ? 'block' : 'none')};
     width: 100%;
   }
 `;
 
-export const EmailItem = styled.div<EmailItemProps>`
+export const EmailItem = styled.div<{ $selected: boolean }>`
   padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   display: flex;
   align-items: center;
-  background: ${({ selected }) => (selected ? '#e6f7ff' : 'white')};
+  background: ${({ $selected }) => ($selected ? '#e6f7ff' : 'white')};
   &:hover {
     background: #f5f5f5;
   }

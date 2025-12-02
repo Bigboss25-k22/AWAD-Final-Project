@@ -4,7 +4,6 @@ import {
   ArrowLeftOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  ReloadOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
 import React from 'react';
@@ -44,7 +43,7 @@ export const MobileHeaderBar: React.FC<MobileHeaderBarProps> = ({
         </Button>
       )}
       <div style={{ flex: 1 }}></div>
-      <Button icon={<ReloadOutlined />} type='text' />
+      {/* <Button icon={<ReloadOutlined />} type='text' /> */}
     </MobileHeader>
   );
 };

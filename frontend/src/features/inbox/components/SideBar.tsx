@@ -18,13 +18,14 @@ const { Search } = Input;
 
 interface SidebarProps {
   collapsed: boolean;
-  setCollapsed: (v: boolean) => void;
+  setCollapsed: (value: boolean) => void;
   isMobile: boolean;
   selectedMailbox: string;
-  setSelectedMailbox: (v: string) => void;
+  setSelectedMailbox: (value: string) => void;
   mailboxes: IMailbox[];
   searchText: string;
-  setSearchText: (v: string) => void;
+  setSearchText: (value: string) => void;
+  setOpenComposeModal?: (value: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mailboxes,
   searchText,
   setSearchText,
+  setOpenComposeModal,
 }) => {
   const items = mailboxes?.map((mailbox) => {
     let icon: React.ReactNode;
@@ -73,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           icon={<EditOutlined />}
           block
           style={{ marginBottom: '16px' }}
+          onClick={() => setOpenComposeModal?.(true)}
         >
           {(!collapsed || isMobile) && 'Compose'}
         </Button>

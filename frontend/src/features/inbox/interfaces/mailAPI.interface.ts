@@ -22,11 +22,27 @@ export interface IEmailParams {
   filter?: string;
 }
 
-export interface ISendEmailPayload {
+export interface IEmailAttachment {
+  filename: string;
+  content: string; // base64 encoded content
+  mimeType: string;
+}
+export interface ISendMessageParams {
   to: string[];
   subject: string;
   body: string;
   cc?: string[];
   bcc?: string[];
-  attachments?: string[];
+  threadId?: string; // reply within a thread
+  replyToMessageId?: string; // reply to a specific message
+  attachments?: IEmailAttachment[]; // file attachments
+}
+
+export interface ReplyEmailParams {
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+  body: string;
+  includeOriginal?: boolean;
+  attachments?: IEmailAttachment[];
 }

@@ -3,19 +3,19 @@
 import { useWindowSize } from '@/hooks/useWindowSize';
 import { breakpoints } from '@/themes/breakpoint';
 import { Layout } from 'antd';
-import React from 'react';
+import React, { useState } from 'react';
+import { ComposeEmailModal } from './components/ComposeEmailModal';
 import { EmailDetailPanel } from './components/EmailDetailPanel';
+import { EmailListPanel } from './components/EmailListPanel';
 import { MobileHeaderBar } from './components/MobileHeaderBar';
 import { Sidebar } from './components/SideBar';
 import { useInbox } from './hooks/useInbox';
-import { DivEmailList, StyledLayout } from './styles/InboxPage.style';
-import { EmailListPanel } from './components/EmailListPanel';
-import { ComposeEmailModal } from './components/ComposeEmailModal';
+import { DivEmail, StyledLayout } from './styles/InboxPage.style';
 
 const InboxPage: React.FC = () => {
   const windowSize = useWindowSize();
-  const isMobile = windowSize.width <= parseInt(breakpoints.md);
-
+  const isMobile = windowSize.width <= parseInt(breakpoints.xLg);
+  const [openComposeModal, setOpenComposeModal] = useState(false);
   const {
     mailboxes,
     checkedEmails,
@@ -47,6 +47,7 @@ const InboxPage: React.FC = () => {
           mailboxes={mailboxes || []}
           searchText={searchText}
           setSearchText={setSearchText}
+          setOpenComposeModal={setOpenComposeModal}
         />
 
         <Layout>
@@ -58,7 +59,7 @@ const InboxPage: React.FC = () => {
             isMobile={isMobile}
           />
 
-          <DivEmailList $isMobile={isMobile}>
+          <DivEmail $isMobile={isMobile}>
             <EmailListPanel
               showEmailList={showEmailList}
               checkedEmails={checkedEmails}
@@ -66,18 +67,20 @@ const InboxPage: React.FC = () => {
               filteredEmails={filteredEmails}
               handleCheckboxChange={handleCheckboxChange}
               handleEmailClick={handleEmailClick}
+              isMobile={isMobile}
+              selectedEmail={selectedEmailData}
             />
 
             <EmailDetailPanel
               show={!isMobile || showEmailDetail}
               email={selectedEmailData}
             />
-          </DivEmailList>
+          </DivEmail>
         </Layout>
       </StyledLayout>
       <ComposeEmailModal
-        open={false}
-        onClose={() => {}}
+        open={openComposeModal}
+        onClose={() => setOpenComposeModal(false)}
         onSend={(payload) => {
           console.log('Send email payload:', payload);
         }}

@@ -13,11 +13,12 @@ import {
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import { Button, Form, Input, Select, Tooltip, Upload, message } from 'antd';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FONT_FAMILY, FONT_SIZE } from '../constants/emails.constant';
 import {
   IEmailAttachment,
   ISendMessageParams,
+  ReplyEmailParams,
 } from '../interfaces/mailAPI.interface';
 import {
   ActionButton,
@@ -39,16 +40,20 @@ import { Toolbar } from '../styles/InboxPage.style';
 import { RichTextInput } from './RichTextInput';
 import { isValidEmail } from '@/helpers/common.helper';
 
-interface ComposeEmailModalProps {
+interface ReplyEmailModalProps {
   open: boolean;
   onClose: () => void;
   onSend: (payload: ISendMessageParams) => void;
+  replyParams?: ReplyEmailParams;
+  originalSubject?: string;
 }
 
-export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
+export const ReplyEmailModal: React.FC<ReplyEmailModalProps> = ({
   open,
   onClose,
   onSend,
+  replyParams,
+  originalSubject,
 }) => {
   const [form] = Form.useForm();
   const [showCc, setShowCc] = useState(false);
@@ -61,6 +66,25 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
+
+  useEffect(() => {
+    if (open && replyParams) {
+      form.setFieldsValue({
+        to: replyParams.to || [],
+        cc: replyParams.cc || [],
+        bcc: replyParams.bcc || [],
+        subject: originalSubject ? `Re: ${originalSubject}` : '',
+        body: replyParams.includeOriginal ? `\n\n---\n${replyParams.body}` : '',
+      });
+
+      if (replyParams.cc && replyParams.cc.length > 0) {
+        setShowCc(true);
+      }
+      if (replyParams.bcc && replyParams.bcc.length > 0) {
+        setShowBcc(true);
+      }
+    }
+  }, [open, replyParams, originalSubject, form]);
 
   const handleFileChange: UploadProps['onChange'] = ({
     fileList: newFileList,
@@ -139,7 +163,6 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
       const values = await form.validateFields();
       console.log('Form Values:', values);
 
-      // Validate all emails
       const allEmails = [
         ...(values.to || []),
         ...(values.cc || []),
@@ -190,19 +213,27 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    form.resetFields();
+    setShowCc(false);
+    setShowBcc(false);
+    setFileList([]);
+    onClose();
+  };
+
   return (
     <StyledModal
       open={open}
-      onCancel={onClose}
+      onCancel={handleClose}
       width={600}
       closeIcon={null}
       title={null}
       footer={null}
     >
       <ModalHeader>
-        <HeaderTitle>New Email</HeaderTitle>
+        <HeaderTitle>Reply Email</HeaderTitle>
         <HeaderActions>
-          <Tooltip title={isMinimized ? 'Maximize' : 'Minimize'}>
+          <Tooltip title={isMinimized ? 'Minimize' : 'Maximize'}>
             <Button
               type='text'
               size='small'
@@ -210,7 +241,7 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
               onClick={() => setIsMinimized(!isMinimized)}
             />
           </Tooltip>
-          <Tooltip title={isMinimized ? 'Maximize' : 'Minimize'}>
+          <Tooltip title='Expand'>
             <Button type='text' size='small' icon={<ExpandOutlined />} />
           </Tooltip>
           <Tooltip title='Close'>
@@ -218,7 +249,7 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
               type='text'
               size='small'
               icon={<CloseOutlined />}
-              onClick={onClose}
+              onClick={handleClose}
             />
           </Tooltip>
         </HeaderActions>
@@ -406,7 +437,7 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
 
         <FooterActions>
           <SendButton icon={<SendOutlined />} onClick={handleSend}>
-            Send
+            Gửi
           </SendButton>
           <Form.Item name='attachments' style={{ margin: 0 }}>
             <Upload
@@ -420,12 +451,9 @@ export const ComposeEmailModal: React.FC<ComposeEmailModalProps> = ({
               </Tooltip>
             </Upload>
           </Form.Item>
-          {/* <ActionButton icon={<LinkOutlined />} />
-          <ActionButton icon={<SmileOutlined />} />
-          <ActionButton icon={<MoreOutlined />} /> */}
           <div style={{ flex: 1 }} />
           <Tooltip title='Delete draft'>
-            <ActionButton icon={<DeleteOutlined />} onClick={onClose} />
+            <ActionButton icon={<DeleteOutlined />} onClick={handleClose} />
           </Tooltip>
         </FooterActions>
       </Form>

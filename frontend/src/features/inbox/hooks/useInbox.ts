@@ -43,6 +43,9 @@ export const useInbox = ({ mailBoxID, mailID, isMobile }: InBoxProps) => {
     selectedMailbox,
   );
 
+  // const mailboxes = MOCK_MAILBOXES;
+  // const emails = MOCK_EMAILS;
+
   const { data: emailDetail, isLoading: isEmailDetailLoading } =
     useGetEmailDetailById(selectedEmail || '');
 
@@ -143,7 +146,6 @@ export const useInbox = ({ mailBoxID, mailID, isMobile }: InBoxProps) => {
   }, [emails, selectedEmail]);
 
   return {
-    // Data
     mailboxes,
     isMailboxesLoading,
     emails,
