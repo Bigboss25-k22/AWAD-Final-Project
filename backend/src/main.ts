@@ -4,9 +4,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './presentation/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser'; // Bỏ * as
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // Swagger Setup
   const config = new DocumentBuilder()
