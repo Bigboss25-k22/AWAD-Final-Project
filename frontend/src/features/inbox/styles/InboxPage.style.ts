@@ -1,5 +1,5 @@
-import { Layout } from 'antd';
-import styled from 'styled-components';
+import { Layout } from "antd";
+import styled from "styled-components";
 
 const { Sider } = Layout;
 
@@ -25,20 +25,20 @@ export const EmailList = styled.div<{ $show: boolean }>`
   overflow-y: none;
   border-right: 2px solid #d9d9d9;
   @media (max-width: 992px) {
-    display: ${({ $show }) => ($show ? 'block' : 'none')};
+    display: ${({ $show }) => ($show ? "block" : "none")};
     width: 100%;
   }
 `;
 
 export const DivEmail = styled.div<{ $isMobile?: boolean }>`
   overflow-y: auto;
-  height: ${({ $isMobile }) => ($isMobile ? 'calc(100% - 56px)' : '100%')};
+  height: ${({ $isMobile }) => ($isMobile ? "calc(100% - 56px)" : "100%")};
   display: flex;
 `;
 
 export const DivEmailList = styled.div<{ $isMobile?: boolean }>`
   height: ${({ $isMobile }) =>
-    $isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 100px)'};
+    $isMobile ? "calc(100vh - 160px)" : "calc(100vh - 100px)"};
   overflow-y: auto;
   &::-webkit-scrollbar {
     display: block;
@@ -61,7 +61,7 @@ export const EmailDetail = styled.div<{ $show: boolean }>`
   overflow-y: none;
   padding: 24px;
   @media (max-width: 992px) {
-    display: ${({ $show }) => ($show ? 'block' : 'none')};
+    display: ${({ $show }) => ($show ? "block" : "none")};
     width: 100%;
   }
 `;
@@ -72,7 +72,7 @@ export const EmailItem = styled.div<{ $selected: boolean }>`
   cursor: pointer;
   display: flex;
   align-items: center;
-  background: ${({ $selected }) => ($selected ? '#e6f7ff' : 'white')};
+  background: ${({ $selected }) => ($selected ? "#e6f7ff" : "white")};
   &:hover {
     background: #f5f5f5;
   }
@@ -111,4 +111,69 @@ export const MobileHeader = styled.div`
   border-bottom: 1px solid #f0f0f0;
   justify-content: space-between;
   align-items: center;
+`;
+
+export const AttachmentContainer = styled.div`
+  margin-top: 24px;
+`;
+
+export const AttachmentList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+`;
+
+export const AttachmentCard = styled.div`
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 12px;
+  width: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fafafa;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+    background-color: #fff;
+  }
+`;
+
+export const FileInfo = styled.div`
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  flex: 1;
+`;
+
+export const FileIconWrapper = styled.div`
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+`;
+
+export const FileMeta = styled.div`
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+`;
+
+export const FileName = styled.span`
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+`;
+
+export const FileSize = styled.span`
+  font-size: 11px;
+  color: #8c8c8c;
 `;
