@@ -5,19 +5,31 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   ForwardOutlined,
+  PaperClipOutlined,
   SendOutlined,
   StarOutlined,
 } from '@ant-design/icons';
 import { Button, Card, Divider, Tooltip, Typography } from 'antd';
 import { useState } from 'react';
+import { getFileIcon } from '../helpers/fileIcon.helper';
 import {
   IEmailDetail,
   IReplyEmailParams,
   ISendMessageParams,
 } from '../interfaces/mailAPI.interface';
-import { EmailDetail } from '../styles/InboxPage.style';
-import { ReplyEmailModal } from './ReplyEmailModal';
+import {
+  AttachmentCard,
+  AttachmentContainer,
+  AttachmentList,
+  EmailDetail,
+  FileIconWrapper,
+  FileInfo,
+  FileMeta,
+  FileName,
+  FileSize,
+} from '../styles/InboxPage.style';
 import { EmptyState } from '@/components/EmptyState';
+import { ReplyEmailModal } from './ReplyEmailModal';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +39,11 @@ interface EmailDetailProps {
   isEmailDetailLoading: boolean;
   handleSendReply: (payload: ISendMessageParams) => void;
   isReplyEmailPending: boolean;
+  onDownloadAttachment: (
+    messageId: string,
+    attachmentId: string,
+    filename: string,
+  ) => void;
 }
 
 export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
@@ -35,6 +52,7 @@ export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
   handleSendReply,
   isReplyEmailPending = false,
   isEmailDetailLoading = false,
+  onDownloadAttachment,
 }) => {
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [replyParams, setReplyParams] = useState<
@@ -44,14 +62,28 @@ export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
   const handleReplyClick = () => {
     if (!email) return;
 
+    const fromAddress = email.from || email.sender || '';
+    const senderEmail = fromAddress.match(/<([^>]+)>/)?.[1] || fromAddress;
+
     const params: IReplyEmailParams = {
-      to: [email.sender],
+      to: [senderEmail],
       body: email.preview || '',
       includeOriginal: true,
     };
 
     setReplyParams(params);
     setReplyModalOpen(true);
+  };
+
+  const handleDownloadClick = (
+    e: React.MouseEvent,
+    attachmentId: string,
+    filename: string,
+  ) => {
+    e.stopPropagation();
+    if (email && attachmentId) {
+      onDownloadAttachment(email.id, attachmentId, filename);
+    }
   };
 
   const renderLoading = () => {
@@ -129,15 +161,44 @@ export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
                 />
               )}
             </div>
-            {email.hasAttachment && (
-              <div style={{ marginTop: 24 }}>
-                <Divider orientation='left'>Attachment</Divider>
-                <div style={{ padding: '8px 0' }}>
-                  <Button icon={<DownloadOutlined />} type='link'>
-                    document.pdf
-                  </Button>
-                </div>
-              </div>
+            {email.attachments && email.attachments.length > 0 && (
+              <AttachmentContainer>
+                <Divider orientation='left' style={{ fontSize: '14px' }}>
+                  <PaperClipOutlined style={{ marginRight: 8 }} />
+                  Attachments ({email.attachments.length})
+                </Divider>
+
+                <AttachmentList>
+                  {email.attachments.map((att) => (
+                    <AttachmentCard key={att.id}>
+                      <FileInfo>
+                        <FileIconWrapper>
+                          {getFileIcon(att.mimeType, att.filename)}
+                        </FileIconWrapper>
+                        <FileMeta>
+                          <FileName title={att.filename}>
+                            {att.filename}
+                          </FileName>
+                          <FileSize>
+                            {Math.round((att.size || 0) / 1024)} KB
+                          </FileSize>
+                        </FileMeta>
+                      </FileInfo>
+
+                      <Tooltip title='Download'>
+                        <Button
+                          type='text'
+                          icon={<DownloadOutlined />}
+                          disabled={!att.id}
+                          onClick={(e) =>
+                            handleDownloadClick(e, att.id || '', att.filename)
+                          }
+                        />
+                      </Tooltip>
+                    </AttachmentCard>
+                  ))}
+                </AttachmentList>
+              </AttachmentContainer>
             )}
           </Card>
 

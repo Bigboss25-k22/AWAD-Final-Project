@@ -40,6 +40,7 @@ const InboxPage: React.FC = () => {
     isSendEmailPending,
     handleReplyEmail,
     isReplyEmailPending,
+    handleDownloadAttachment,
     handlePageChange,
   } = useInbox({ isMobile });
 
@@ -87,6 +88,7 @@ const InboxPage: React.FC = () => {
               handleSendReply={handleReplyEmail}
               isReplyEmailPending={isReplyEmailPending}
               isEmailDetailLoading={isEmailDetailLoading}
+              onDownloadAttachment={handleDownloadAttachment}
             />
           </DivEmail>
         </Layout>

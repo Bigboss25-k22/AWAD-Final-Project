@@ -3,7 +3,6 @@ import { PARAMS_URL } from '@/constants/params.constant';
 import { useControlParams } from '@/hooks/useControlParams';
 import { App } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MAILBOX_DEFAULT_NAMES } from '../constants/emails.constant';
 import {
   IEmail,
   IReplyEmailParams,
@@ -16,7 +15,9 @@ import {
   useMutationModifyEmailById,
   useMutationReplyEmailById,
   useMutationSendEmail,
+  useMutationDownloadAttachment,
 } from './mailAPIs';
+import { MAILBOX_DEFAULT_NAMES } from '../constants/emails.constant';
 
 interface InBoxProps {
   mailBoxID?: string;
@@ -92,8 +93,39 @@ export const useInbox = ({ mailBoxID, mailID, isMobile }: InBoxProps) => {
       },
     });
 
-  // const { data: streamAttachment, isLoading: isStreamAttachmentLoading } =
-  //   useGetAttachmentById(selectedEmail || '');
+  const { mutateAsync: downloadAttachmentMutate } =
+    useMutationDownloadAttachment({
+      onError: (error) => {
+        console.error('Download Attachment Failed:', error);
+        notification.error({
+          message: 'Download Failed',
+          description: 'Could not download the attachment.',
+        });
+      },
+    });
+
+  const handleDownloadAttachment = async (
+    messageId: string,
+    attachmentId: string,
+    filename: string,
+  ) => {
+    try {
+      const response = await downloadAttachmentMutate({
+        messageId,
+        attachmentId,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {}
+  };
 
   const handleCheckboxChange = useCallback(
     (emailId: string, checked: boolean) => {
@@ -172,7 +204,11 @@ export const useInbox = ({ mailBoxID, mailID, isMobile }: InBoxProps) => {
 
   const handleReplyEmail = async (params: IReplyEmailParams) => {
     try {
-      await replyEmail({ id: selectedMailbox, params });
+      if (!selectedEmail) {
+        notification.error({ message: 'No email selected to reply' });
+        return;
+      }
+      await replyEmail({ id: selectedEmail, params });
     } catch (error) {
       console.error('Reply Email Failed:', error);
     }
@@ -200,6 +236,8 @@ export const useInbox = ({ mailBoxID, mailID, isMobile }: InBoxProps) => {
     isEmailDetailLoading,
     // streamAttachment,
     // isStreamAttachmentLoading,
+
+    handleDownloadAttachment,
 
     handleSendEmail,
     isSendEmailPending,
