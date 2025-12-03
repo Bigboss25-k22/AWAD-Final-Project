@@ -74,6 +74,17 @@ export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
     setReplyModalOpen(true);
   };
 
+  const handleDownloadClick = (
+    e: React.MouseEvent,
+    attachmentId: string,
+    filename: string
+  ) => {
+    e.stopPropagation(); // Ngăn chặn sự kiện click lan ra ngoài (ví dụ click vào card để xem preview)
+    if (email && attachmentId) {
+      onDownloadAttachment(email.id, attachmentId, filename);
+    }
+  };
+
   const renderLoading = () => {
     return <Spin></Spin>;
   };
@@ -177,15 +188,10 @@ export const EmailDetailPanel: React.FC<EmailDetailProps> = ({
                         <Button
                           type="text"
                           icon={<DownloadOutlined />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            att.id &&
-                              onDownloadAttachment(
-                                email.id,
-                                att.id,
-                                att.filename
-                              );
-                          }}
+                          disabled={!att.id}
+                          onClick={(e) =>
+                            handleDownloadClick(e, att.id || "", att.filename)
+                          }
                         />
                       </Tooltip>
                     </AttachmentCard>
