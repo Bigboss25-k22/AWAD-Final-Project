@@ -1,5 +1,5 @@
-import { API_PATH } from '@/constants/apis.constant';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { API_PATH } from "@/constants/apis.constant";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   getEmailDetailById,
   getListEmailsByMailBoxId,
@@ -8,9 +8,12 @@ import {
   replyEmailById,
   sendEmail,
   streamAttachmentById,
-} from '../services/mailQueries';
-import { UseMutationLoginOptions } from '@/interfaces/query';
-import { IEmailParams, IReplyEmailParams } from '../interfaces/mailAPI.interface';
+} from "../services/mailQueries";
+import { UseMutationLoginOptions } from "@/interfaces/query";
+import {
+  IEmailParams,
+  IReplyEmailParams,
+} from "../interfaces/mailAPI.interface";
 
 // Hook to get list of mail boxes
 export const useGetMailBoxes = () => {
@@ -61,7 +64,8 @@ export const useMutationReplyEmailById = ({
 }: UseMutationLoginOptions) => {
   return useMutation({
     mutationKey: [API_PATH.EMAIL.REPLY_EMAIL.API_KEY],
-    mutationFn: ({ id, params }: { id: string; params: IReplyEmailParams }) => replyEmailById(id, params),
+    mutationFn: ({ id, params }: { id: string; params: IReplyEmailParams }) =>
+      replyEmailById(id, params),
     onSuccess,
     onError,
   });
@@ -81,11 +85,34 @@ export const useMutationModifyEmailById = ({
 };
 
 // Stream attachment
-export const useGetAttachmentById = (id: string) => {
+export const useGetAttachmentById = (
+  messageId: string,
+  attachmentId: string
+) => {
   return useQuery({
-    queryKey: [API_PATH.EMAIL.ATTACHMENT_DOWNLOAD.API_KEY, id],
-    queryFn: () => streamAttachmentById(id),
+    queryKey: [
+      API_PATH.EMAIL.ATTACHMENT_DOWNLOAD.API_KEY,
+      messageId,
+      attachmentId,
+    ],
+    queryFn: () => streamAttachmentById(messageId, attachmentId),
     select: (response) => response.data,
-    enabled: !!id,
+    enabled: !!messageId && !!attachmentId,
+  });
+};
+
+export const useMutationDownloadAttachment = ({
+  onError,
+}: UseMutationLoginOptions) => {
+  return useMutation({
+    mutationKey: [API_PATH.EMAIL.ATTACHMENT_DOWNLOAD.API_KEY],
+    mutationFn: ({
+      messageId,
+      attachmentId,
+    }: {
+      messageId: string;
+      attachmentId: string;
+    }) => streamAttachmentById(messageId, attachmentId),
+    onError,
   });
 };

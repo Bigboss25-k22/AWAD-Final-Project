@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useWindowSize } from '@/hooks/useWindowSize';
-import { breakpoints } from '@/themes/breakpoint';
-import { Layout } from 'antd';
-import React, { useState } from 'react';
-import { ComposeEmailModal } from './components/ComposeEmailModal';
-import { EmailDetailPanel } from './components/EmailDetailPanel';
-import { EmailListPanel } from './components/EmailListPanel';
-import { MobileHeaderBar } from './components/MobileHeaderBar';
-import { Sidebar } from './components/SideBar';
-import { useInbox } from './hooks/useInbox';
-import { DivEmail, StyledLayout } from './styles/InboxPage.style';
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { breakpoints } from "@/themes/breakpoint";
+import { Layout } from "antd";
+import React, { useState } from "react";
+import { ComposeEmailModal } from "./components/ComposeEmailModal";
+import { EmailDetailPanel } from "./components/EmailDetailPanel";
+import { EmailListPanel } from "./components/EmailListPanel";
+import { MobileHeaderBar } from "./components/MobileHeaderBar";
+import { Sidebar } from "./components/SideBar";
+import { useInbox } from "./hooks/useInbox";
+import { DivEmail, StyledLayout } from "./styles/InboxPage.style";
 
 const InboxPage: React.FC = () => {
   const windowSize = useWindowSize();
@@ -39,6 +39,7 @@ const InboxPage: React.FC = () => {
     isSendEmailPending,
     handleReplyEmail,
     isReplyEmailPending,
+    handleDownloadAttachment,
   } = useInbox({ isMobile });
 
   return (
@@ -83,6 +84,7 @@ const InboxPage: React.FC = () => {
               handleSendReply={handleReplyEmail}
               isReplyEmailPending={isReplyEmailPending}
               isEmailDetailLoading={isEmailDetailLoading}
+              onDownloadAttachment={handleDownloadAttachment}
             />
           </DivEmail>
         </Layout>

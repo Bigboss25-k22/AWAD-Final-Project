@@ -40,9 +40,11 @@ export interface IEmailParams {
 }
 
 export interface IEmailAttachment {
+  id?: string;
   filename: string;
-  content: string; // base64 encoded content
+  content?: string; // base64 encoded content
   mimeType: string;
+  size?: number;
 }
 export interface ISendMessageParams {
   to: string[];
