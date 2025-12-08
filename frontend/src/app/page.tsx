@@ -1,21 +1,14 @@
 'use client';
-import { App, Button } from 'antd';
+import { useAuthInitialization } from '@/hooks/useAuthInitialization';
+import { LoadingSpin } from '@/components/LoadingSpin';
 
 export default function Home() {
-  const { notification } = App.useApp();
+  const { isInitializing } = useAuthInitialization();
 
-  return (
-    <Button
-      type='primary'
-      onClick={() =>
-        notification.success({
-          message: 'Success',
-          description: 'This is a success notification.',
-        })
-      }
-    >
-      Ant Design Button
-    </Button>
-  );
+  if (isInitializing) {
+    return <LoadingSpin />;
+  }
+
+  return null;
 }
 

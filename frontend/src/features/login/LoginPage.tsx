@@ -1,8 +1,11 @@
 "use client";
 import { LockOutlined, MailOutlined, GoogleOutlined } from "@ant-design/icons";
 import { Form, Input, Typography, Divider, Button } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/hooks";
+import { selectAccessToken } from "@/redux/slices/authSlice";
 
 import { useLogin } from "./hooks/useLogin";
 import {
@@ -15,12 +18,21 @@ import {
 const { Title } = Typography;
 
 const LoginPage: React.FC = () => {
+  const router = useRouter();
+  const accessToken = useAppSelector(selectAccessToken);
   const {
     form,
     onFinish,
     isLoading,
     handleGoogleLogin,
   } = useLogin();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (accessToken) {
+      router.push('/inbox');
+    }
+  }, [accessToken, router]);
 
   return (
     <LoginContainer>

@@ -8,14 +8,12 @@ export function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value;
   const { pathname } = req.nextUrl;
 
+  // Redirect to login if accessing protected route without refresh token
   if (!refreshToken && !publicRouter?.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (refreshToken && pathname === '/login') {
-    return NextResponse.redirect(new URL('/inbox', req.url));
-  }
-
+  // Allow all other requests (including authenticated users on /login)
   return NextResponse.next();
 }
 
