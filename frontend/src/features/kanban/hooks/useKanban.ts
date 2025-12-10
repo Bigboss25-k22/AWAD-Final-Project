@@ -1,117 +1,125 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { App } from 'antd';
 import { DropResult } from '@hello-pangea/dnd';
 import { useGetEmailsByMailBoxId } from '@/features/inbox/hooks/mailAPIs';
 import { IEmail } from '@/features/inbox/interfaces/mailAPI.interface';
 import {
     IKanbanEmail,
-    IKanbanState,
     KanbanStatus,
 } from '../interfaces/kanban.interface';
 import {
     KANBAN_COLUMN_ORDER,
-    KANBAN_LOCAL_STORAGE_KEY,
     SNOOZED_COLUMN_ID,
 } from '../constants/kanban.constant';
 import { LIMIT_DEFAULT } from '@/constants/common.constant';
+import {
+    useGetWorkflows,
+    useMutationUpdateWorkflowStatus,
+    useMutationSnoozeWorkflow,
+} from '@/features/inbox/hooks/workflowAPIs';
+import { WorkflowStatus } from '@/features/inbox/interfaces/workflow.interface';
 
 interface UseKanbanProps {
     mailboxId?: string;
 }
 
-const DEFAULT_STATE: IKanbanState = {
-    columns: {
-        INBOX: [],
-        TODO: [],
-        IN_PROGRESS: [],
-        DONE: [],
-        SNOOZED: [],
-    },
-    emailStates: {},
+const mapKanbanToWorkflowStatus = (status: KanbanStatus): WorkflowStatus => {
+    return status as unknown as WorkflowStatus;
+};
+
+const mapWorkflowToKanbanStatus = (status: WorkflowStatus): KanbanStatus => {
+    return status as unknown as KanbanStatus;
 };
 
 export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
     const { notification } = App.useApp();
-    const [kanbanState, setKanbanState] = useState<IKanbanState>(DEFAULT_STATE);
     const [snoozeModalOpen, setSnoozeModalOpen] = useState(false);
     const [selectedEmailForSnooze, setSelectedEmailForSnooze] = useState<string | null>(null);
 
-    // Fetch emails from inbox
-    const { data: emailsData, isLoading: isEmailsLoading, refetch } = useGetEmailsByMailBoxId(
-        { page: 1, limit: Number(LIMIT_DEFAULT) * 5 }, // Get more emails for kanban view
+    const { data: emailsData, isLoading: isEmailsLoading, refetch: refetchEmails } = useGetEmailsByMailBoxId(
+        { page: 1, limit: Number(LIMIT_DEFAULT) * 5 },
         mailboxId
     );
 
-    // Load saved states from localStorage
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedStates = localStorage.getItem(KANBAN_LOCAL_STORAGE_KEY);
-            if (savedStates) {
-                try {
-                    const parsed = JSON.parse(savedStates);
-                    setKanbanState((prev) => ({
-                        ...prev,
-                        emailStates: parsed,
-                    }));
-                } catch (e) {
-                    console.error('Failed to parse kanban states from localStorage:', e);
-                }
-            }
-        }
-    }, []);
+    const { data: inboxWorkflows, refetch: refetchInbox } = useGetWorkflows({
+        status: WorkflowStatus.INBOX,
+        limit: 100,
+        offset: 0,
+    });
 
-    // Save states to localStorage whenever they change
-    const saveStatesToLocalStorage = useCallback((states: IKanbanState['emailStates']) => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(KANBAN_LOCAL_STORAGE_KEY, JSON.stringify(states));
-        }
-    }, []);
+    const { data: todoWorkflows, refetch: refetchTodo } = useGetWorkflows({
+        status: WorkflowStatus.TODO,
+        limit: 100,
+        offset: 0,
+    });
 
-    // Check and restore snoozed emails
-    const checkAndRestoreSnoozedEmails = useCallback(() => {
-        const now = new Date();
-        let hasChanges = false;
+    const { data: doneWorkflows, refetch: refetchDone } = useGetWorkflows({
+        status: WorkflowStatus.DONE,
+        limit: 100,
+        offset: 0,
+    });
 
-        setKanbanState((prev) => {
-            const newEmailStates = { ...prev.emailStates };
+    const { data: snoozedWorkflows, refetch: refetchSnoozed } = useGetWorkflows({
+        status: WorkflowStatus.SNOOZED,
+        limit: 100,
+        offset: 0,
+    });
 
-            Object.entries(newEmailStates).forEach(([emailId, state]) => {
-                if (state.status === 'SNOOZED' && state.snoozedUntil) {
-                    const snoozedUntil = new Date(state.snoozedUntil);
-                    if (snoozedUntil <= now) {
-                        // Restore to original status or INBOX
-                        newEmailStates[emailId] = {
-                            ...state,
-                            status: state.originalStatus || 'INBOX',
-                            snoozedUntil: null,
-                            originalStatus: null,
-                        };
-                        hasChanges = true;
-                    }
-                }
+    const { mutateAsync: updateStatus } = useMutationUpdateWorkflowStatus({
+        onSuccess: () => {
+            refetchAllWorkflows();
+        },
+        onError: (error) => {
+            notification.error({
+                message: 'Failed to update status',
+                description: error.message,
             });
+        },
+    });
 
-            if (hasChanges) {
-                saveStatesToLocalStorage(newEmailStates);
-                notification.info({
-                    message: 'Email Restored',
-                    description: 'A snoozed email has been restored to your inbox.',
-                });
-                return { ...prev, emailStates: newEmailStates };
-            }
-            return prev;
-        });
-    }, [notification, saveStatesToLocalStorage]);
+    const { mutateAsync: snoozeWorkflow } = useMutationSnoozeWorkflow({
+        onSuccess: () => {
+            refetchAllWorkflows();
+        },
+        onError: (error) => {
+            notification.error({
+                message: 'Failed to snooze email',
+                description: error.message,
+            });
+        },
+    });
 
-    // Set up interval to check for expired snoozes
-    useEffect(() => {
-        const interval = setInterval(checkAndRestoreSnoozedEmails, 30000); // Check every 30 seconds
-        return () => clearInterval(interval);
-    }, [checkAndRestoreSnoozedEmails]);
+    const refetchAllWorkflows = useCallback(() => {
+        refetchInbox();
+        refetchTodo();
+        refetchDone();
+        refetchSnoozed();
+        refetchEmails();
+    }, [refetchInbox, refetchTodo, refetchDone, refetchSnoozed, refetchEmails]);
 
-    // Transform emails to kanban format and group by columns
+    const transformWorkflowToKanbanEmail = useCallback((workflow: any): IKanbanEmail => {
+        const gmailEmail = emailsData?.emails?.find((e: IEmail) => e.id === workflow.gmailMessageId);
+
+        return {
+            id: workflow.gmailMessageId,
+            mailboxId: 'INBOX',
+            sender: workflow.from,
+            subject: workflow.subject,
+            preview: workflow.snippet || '',
+            timestamp: workflow.date,
+            status: mapWorkflowToKanbanStatus(workflow.status),
+            snoozedUntil: workflow.snoozedUntil || null,
+            originalStatus: null,
+            aiSummary: workflow.aiSummary,
+            urgencyScore: workflow.urgencyScore,
+            isRead: gmailEmail?.isRead,
+            isStarred: gmailEmail?.isStarred,
+            hasAttachment: gmailEmail?.hasAttachment,
+        };
+    }, [emailsData]);
+
     const groupedEmails = useMemo(() => {
         const result: Record<KanbanStatus, IKanbanEmail[]> = {
             INBOX: [],
@@ -121,40 +129,32 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
             SNOOZED: [],
         };
 
-        if (!emailsData?.emails) return result;
+        if (inboxWorkflows?.data) {
+            result.INBOX = inboxWorkflows.data.map(transformWorkflowToKanbanEmail);
+        }
 
-        emailsData.emails.forEach((email: IEmail) => {
-            const savedState = kanbanState.emailStates[email.id];
-            const status: KanbanStatus = savedState?.status || 'INBOX';
-            const snoozedUntil = savedState?.snoozedUntil || null;
-            const originalStatus = savedState?.originalStatus || null;
+        if (todoWorkflows?.data) {
+            result.TODO = todoWorkflows.data.map(transformWorkflowToKanbanEmail);
+        }
 
-            const kanbanEmail: IKanbanEmail = {
-                ...email,
-                status,
-                snoozedUntil,
-                originalStatus,
-            };
+        if (doneWorkflows?.data) {
+            result.DONE = doneWorkflows.data.map(transformWorkflowToKanbanEmail);
+        }
 
-            if (result[status]) {
-                result[status].push(kanbanEmail);
-            } else {
-                result.INBOX.push(kanbanEmail);
-            }
-        });
+        if (snoozedWorkflows?.data) {
+            result.SNOOZED = snoozedWorkflows.data.map(transformWorkflowToKanbanEmail);
+        }
 
         return result;
-    }, [emailsData, kanbanState.emailStates]);
+    }, [inboxWorkflows, todoWorkflows, doneWorkflows, snoozedWorkflows, transformWorkflowToKanbanEmail]);
 
     // Handle drag and drop
     const handleDragEnd = useCallback(
-        (result: DropResult) => {
+        async (result: DropResult) => {
             const { destination, source, draggableId } = result;
 
-            // Dropped outside a droppable area
             if (!destination) return;
 
-            // Dropped in the same position
             if (
                 destination.droppableId === source.droppableId &&
                 destination.index === source.index
@@ -165,98 +165,109 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
             const newStatus = destination.droppableId as KanbanStatus;
             const emailId = draggableId;
 
-            setKanbanState((prev) => {
-                const newEmailStates = {
-                    ...prev.emailStates,
-                    [emailId]: {
-                        status: newStatus,
-                        snoozedUntil: null,
-                        originalStatus: null,
-                    },
-                };
+            const allWorkflows = [
+                ...(inboxWorkflows?.data || []),
+                ...(todoWorkflows?.data || []),
+                ...(doneWorkflows?.data || []),
+                ...(snoozedWorkflows?.data || []),
+            ];
 
-                saveStatesToLocalStorage(newEmailStates);
+            const workflow = allWorkflows.find((w) => w.gmailMessageId === emailId);
 
-                return {
-                    ...prev,
-                    emailStates: newEmailStates,
-                };
-            });
+            if (!workflow) {
+                notification.error({
+                    message: 'Error',
+                    description: 'Could not find workflow for this email',
+                });
+                return;
+            }
 
-            notification.success({
-                message: 'Email Moved',
-                description: `Email moved to ${newStatus.replace('_', ' ')}`,
-                duration: 2,
-            });
+            try {
+                await updateStatus({
+                    id: workflow.id,
+                    status: mapKanbanToWorkflowStatus(newStatus),
+                });
+
+                notification.success({
+                    message: 'Email Moved',
+                    description: `Email moved to ${newStatus.replace('_', ' ')}`,
+                    duration: 2,
+                });
+            } catch (error) {
+                console.error('Failed to update status:', error);
+            }
         },
-        [notification, saveStatesToLocalStorage]
+        [inboxWorkflows, todoWorkflows, doneWorkflows, snoozedWorkflows, updateStatus, notification]
     );
 
     // Handle snooze
     const handleSnooze = useCallback(
-        (emailId: string, snoozedUntil: Date) => {
-            const currentState = kanbanState.emailStates[emailId];
-            const originalStatus = currentState?.status || 'INBOX';
+        async (emailId: string, snoozedUntil: Date) => {
+            const allWorkflows = [
+                ...(inboxWorkflows?.data || []),
+                ...(todoWorkflows?.data || []),
+                ...(doneWorkflows?.data || []),
+                ...(snoozedWorkflows?.data || []),
+            ];
 
-            setKanbanState((prev) => {
-                const newEmailStates = {
-                    ...prev.emailStates,
-                    [emailId]: {
-                        status: 'SNOOZED' as KanbanStatus,
-                        snoozedUntil: snoozedUntil.toISOString(),
-                        originalStatus: originalStatus as KanbanStatus,
-                    },
-                };
+            const workflow = allWorkflows.find((w) => w.gmailMessageId === emailId);
 
-                saveStatesToLocalStorage(newEmailStates);
+            if (!workflow) {
+                notification.error({
+                    message: 'Error',
+                    description: 'Could not find workflow for this email',
+                });
+                return;
+            }
 
-                return {
-                    ...prev,
-                    emailStates: newEmailStates,
-                };
-            });
+            try {
+                await snoozeWorkflow({
+                    id: workflow.id,
+                    snoozedUntil,
+                });
 
-            setSnoozeModalOpen(false);
-            setSelectedEmailForSnooze(null);
+                setSnoozeModalOpen(false);
+                setSelectedEmailForSnooze(null);
 
-            notification.success({
-                message: 'Email Snoozed',
-                description: `Email will reappear on ${snoozedUntil.toLocaleString()}`,
-            });
+                notification.success({
+                    message: 'Email Snoozed',
+                    description: `Email will reappear on ${snoozedUntil.toLocaleString()}`,
+                });
+            } catch (error) {
+                console.error('Failed to snooze:', error);
+            }
         },
-        [kanbanState.emailStates, notification, saveStatesToLocalStorage]
+        [inboxWorkflows, todoWorkflows, doneWorkflows, snoozedWorkflows, snoozeWorkflow, notification]
     );
 
     // Handle unsnooze
     const handleUnsnooze = useCallback(
-        (emailId: string) => {
-            const currentState = kanbanState.emailStates[emailId];
-            const originalStatus = currentState?.originalStatus || 'INBOX';
+        async (emailId: string) => {
+            const workflow = snoozedWorkflows?.data?.find((w) => w.gmailMessageId === emailId);
 
-            setKanbanState((prev) => {
-                const newEmailStates = {
-                    ...prev.emailStates,
-                    [emailId]: {
-                        status: originalStatus,
-                        snoozedUntil: null,
-                        originalStatus: null,
-                    },
-                };
+            if (!workflow) {
+                notification.error({
+                    message: 'Error',
+                    description: 'Could not find workflow for this email',
+                });
+                return;
+            }
 
-                saveStatesToLocalStorage(newEmailStates);
+            try {
+                await updateStatus({
+                    id: workflow.id,
+                    status: WorkflowStatus.INBOX, // Return to inbox by default
+                });
 
-                return {
-                    ...prev,
-                    emailStates: newEmailStates,
-                };
-            });
-
-            notification.success({
-                message: 'Email Unsnoozed',
-                description: 'Email has been restored to its original column.',
-            });
+                notification.success({
+                    message: 'Email Unsnoozed',
+                    description: 'Email has been restored to inbox.',
+                });
+            } catch (error) {
+                console.error('Failed to unsnooze:', error);
+            }
         },
-        [kanbanState.emailStates, notification, saveStatesToLocalStorage]
+        [snoozedWorkflows, updateStatus, notification]
     );
 
     // Open snooze modal
@@ -271,7 +282,7 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
         setSelectedEmailForSnooze(null);
     }, []);
 
-    // Get columns to display (excluding IN_PROGRESS for now)
+    // Get columns to display
     const columns = useMemo(() => {
         return KANBAN_COLUMN_ORDER.map((status) => ({
             id: status,
@@ -296,6 +307,6 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
         closeSnoozeModal,
         snoozeModalOpen,
         selectedEmailForSnooze,
-        refetch,
+        refetch: refetchAllWorkflows,
     };
 };

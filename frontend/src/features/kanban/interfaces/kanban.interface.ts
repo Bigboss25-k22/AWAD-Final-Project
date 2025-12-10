@@ -12,6 +12,8 @@ export interface IKanbanEmail {
     status: KanbanStatus;
     snoozedUntil?: string | null;
     originalStatus?: KanbanStatus | null;
+    aiSummary?: string;
+    urgencyScore?: number;
 }
 
 export type KanbanStatus = 'INBOX' | 'TODO' | 'IN_PROGRESS' | 'DONE' | 'SNOOZED';

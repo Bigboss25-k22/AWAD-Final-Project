@@ -4,6 +4,8 @@ import React from 'react';
 import { ClockCircleOutlined, ExportOutlined } from '@ant-design/icons';
 import { formatDate } from '@/helpers/day.helper';
 import { IKanbanEmail } from '../interfaces/kanban.interface';
+import { UrgencyBadge } from '@/features/inbox/components/UrgencyBadge';
+import { SummaryDisplay } from '@/features/inbox/components/SummaryDisplay';
 import {
     CardContainer,
     CardHeader,
@@ -12,9 +14,6 @@ import {
     SenderName,
     CardTimestamp,
     CardSubject,
-    SummaryBox,
-    SummaryHeader,
-    SummaryText,
     CardActions,
     ActionButton,
     OpenMailLink,
@@ -101,17 +100,18 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
 
             <CardSubject>{email.subject}</CardSubject>
 
-            <SummaryBox>
-                <SummaryHeader>
-                    <span>📧</span>
-                    <span>Preview</span>
-                </SummaryHeader>
-                <SummaryText>
-                    {email.preview && email.preview.length > 100
-                        ? `${email.preview.substring(0, 100)}...`
-                        : email.preview || 'No preview available'}
-                </SummaryText>
-            </SummaryBox>
+            {email.urgencyScore !== undefined && (
+                <div style={{ marginTop: '8px' }}>
+                    <UrgencyBadge urgencyScore={email.urgencyScore} showLabel={true} />
+                </div>
+            )}
+
+            <SummaryDisplay
+                summary={email.aiSummary}
+                preview={email.preview}
+                maxLength={120}
+                showIcon={true}
+            />
 
             {email.status === 'SNOOZED' && email.snoozedUntil && (
                 <SnoozeIndicator>

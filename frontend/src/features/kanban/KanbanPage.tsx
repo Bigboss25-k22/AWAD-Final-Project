@@ -1,13 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Button, Input, Tooltip, Layout, Spin } from 'antd';
+import { Button, Input, Tooltip, Layout } from 'antd';
 import {
     ReloadOutlined,
     AppstoreOutlined,
 } from '@ant-design/icons';
 import { useKanban } from './hooks/useKanban';
 import { ViewToggle } from '@/components/ViewToggle';
+import { LoadingSpin } from '@/components/LoadingSpin';
+import { EmptyState } from '@/components/EmptyState';
 import { SnoozeModal } from './components/SnoozeModal';
 import { KanbanColumn } from './components/KanbanColumn';
 import {
@@ -53,16 +55,44 @@ const KanbanPage: React.FC = () => {
     if (isEmailsLoading) {
         return (
             <KanbanLayout>
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100vh',
-                    }}
-                >
-                    <Spin size="large" tip="Loading emails..." />
-                </div>
+                <LoadingSpin />
+            </KanbanLayout>
+        );
+    }
+
+    const hasEmails = columns.some((col) => col.emails.length > 0) || snoozedEmails.length > 0;
+
+    if (!hasEmails) {
+        return (
+            <KanbanLayout>
+                <KanbanHeader>
+                    <KanbanTitle>
+                        <AppstoreOutlined />
+                        AI Email Flow
+                    </KanbanTitle>
+
+                    <SearchInput>
+                        <Search
+                            placeholder="Search emails..."
+                            allowClear
+                            style={{ width: '100%' }}
+                        />
+                    </SearchInput>
+
+                    <HeaderActions>
+                        <Tooltip title="Refresh">
+                            <Button
+                                type="text"
+                                icon={<ReloadOutlined />}
+                                onClick={() => refetch()}
+                            />
+                        </Tooltip>
+                        <ViewToggle currentView="kanban" />
+                    </HeaderActions>
+                </KanbanHeader>
+                <Layout.Content>
+                    <EmptyState message="No emails to display" />
+                </Layout.Content>
             </KanbanLayout>
         );
     }
