@@ -21,12 +21,12 @@ export interface GmailMessage {
   threadId: string;
   snippet: string;
   payload?: {
-    partId?: string;
-    mimeType?: string;
-    filename?: string;
-    headers: GmailHeader[];
-    body?: { data?: string; size?: number };
-    parts?: GmailMessagePart[];
+    headers: { name: string; value: string }[];
+    body?: { data?: string };
+    parts?: Array<{
+      mimeType: string;
+      body?: { data?: string };
+    }>;
   };
   internalDate: string;
   labelIds: string[];
@@ -82,6 +82,18 @@ export interface SendMessageParams {
 export interface ModifyMessageParams {
   addLabelIds?: string[];
   removeLabelIds?: string[];
+}
+
+export interface GmailMessageDetail extends GmailMessage {
+  subject?: string;
+  from?: string;
+  body?: string;
+  date?: string;
+}
+
+export interface IGmailPort {
+  listMessages(userId: string, params: ListMessagesParams): Promise<ListMessagesResponse>;
+  getMessage(userId: string, messageId: string): Promise<GmailMessageDetail>;
 }
 
 export abstract class IGmailService {
