@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { App } from 'antd';
 import { DropResult } from '@hello-pangea/dnd';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { API_PATH } from '@/constants/apis.constant';
 import {
   useGetEmailsByMailBoxId,
@@ -325,9 +325,15 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
     })),
   });
 
+  const queryClient = useQueryClient();
+
   const { mutateAsync: modifyLabels } = useMutationModifyEmailLabels({
     onSuccess: () => {
       refetchAllWorkflows();
+      // Invalidate all email queries to refresh custom columns
+      queryClient.invalidateQueries({
+        queryKey: [API_PATH.EMAIL.GET_LIST_EMAILS_MAILBOX.API_KEY],
+      });
     },
     onError: (error) => {
       notification.error({
@@ -363,7 +369,10 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
         (col) => `custom-${col.id}` === sourceColumnId,
       );
 
-      // If moving to/from custom column, handle label sync
+      // Check if source is from a static workflow column (for determining if we need workflow update)
+      const isSourceStaticColumn = ['TODO', 'DONE'].includes(sourceColumnId);
+
+      // Handle label modifications for custom columns
       if (destCustomColumn || sourceCustomColumn) {
         try {
           const addLabelIds = destCustomColumn
@@ -378,19 +387,26 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
             addLabelIds,
             removeLabelIds,
           });
-
-          notification.success({
-            message: 'Email Moved',
-            description: `Email moved to ${
-              destCustomColumn?.name || destCustomColumn?.label || destColumnId
-            }`,
-            duration: 2,
-          });
-          return;
         } catch (error) {
           console.error('Failed to modify labels:', error);
+          notification.error({
+            message: 'Failed to move email',
+            description: 'Could not update email labels',
+          });
           return;
         }
+      }
+
+      // If destination is a custom column only (not moving to static), we're done
+      if (destCustomColumn && !isSourceStaticColumn) {
+        notification.success({
+          message: 'Email Moved',
+          description: `Email moved to ${
+            destCustomColumn.name || destCustomColumn.label
+          }`,
+          duration: 2,
+        });
+        return;
       }
 
       // For workflow columns, use existing logic
@@ -437,6 +453,7 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
       modifyLabels,
       dynamicColumns,
       notification,
+      queryClient,
     ],
   );
 

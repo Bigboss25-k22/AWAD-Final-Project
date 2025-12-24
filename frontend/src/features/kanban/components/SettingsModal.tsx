@@ -47,9 +47,12 @@ const GMAIL_LABELS = [
   { value: 'INBOX', label: 'Inbox' },
   { value: 'STARRED', label: 'Starred' },
   { value: 'IMPORTANT', label: 'Important' },
-  { value: 'SENT', label: 'Sent' },
-  { value: 'DRAFT', label: 'Draft' },
   { value: 'UNREAD', label: 'Unread' },
+  { value: 'CATEGORY_PERSONAL', label: 'Personal' },
+  { value: 'CATEGORY_SOCIAL', label: 'Social' },
+  { value: 'CATEGORY_PROMOTIONS', label: 'Promotions' },
+  { value: 'CATEGORY_UPDATES', label: 'Updates' },
+  { value: 'CATEGORY_FORUMS', label: 'Forums' },
 ];
 
 interface SettingsModalProps {

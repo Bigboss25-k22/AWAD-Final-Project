@@ -17,7 +17,10 @@ import { GetWorkflowsUseCase } from '../../application/use-cases/workflow/get-wo
 import { WorkflowStatus } from '@prisma/client';
 import { EmailWorkflowEntity } from '../../domain/entities/emaiWorkflow.entity';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { ApiGetWorkflowsDocs, ApiUpdateWorkflowStatusDocs } from '../decorators/swagger/workflow.swagger.decorator';
+import {
+  ApiGetWorkflowsDocs,
+  ApiUpdateWorkflowStatusDocs,
+} from '../decorators/swagger/workflow.swagger.decorator';
 import { ApiSearchWorkflowsDocs } from '../decorators/swagger/search-workflow.swagger.decorator';
 import { SearchWorkflowsUseCase } from '../../application/use-cases/workflow/search-workflow.use-case';
 
@@ -32,7 +35,7 @@ export class WorkflowController {
     private readonly getWorkflowsUseCase: GetWorkflowsUseCase,
     private readonly searchWorkflowsUseCase: SearchWorkflowsUseCase,
   ) {}
-  
+
   @Get()
   @ApiGetWorkflowsDocs()
   async getWorkflows(
@@ -66,8 +69,14 @@ export class WorkflowController {
     @Req() req: { user: { userId: string } },
   ): Promise<{ success: boolean; data: EmailWorkflowEntity }> {
     const userId = req.user.userId;
-    this.logger.log(`PATCH /workflows/${id}/status - User: ${userId}, New status: ${status}`);
-    const updated = await this.getWorkflowsUseCase.updateWorkflowStatus(userId, id, status);
+    this.logger.log(
+      `PATCH /workflows/${id}/status - User: ${userId}, New status: ${status}`,
+    );
+    const updated = await this.getWorkflowsUseCase.updateWorkflowStatus(
+      userId,
+      id,
+      status,
+    );
     return { success: true, data: updated };
   }
 
@@ -79,7 +88,7 @@ export class WorkflowController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
-  ){
+  ) {
     const userId = req.user.userId;
     this.logger.log(`GET /workflows/search - User: ${userId}, Query: ${query}`);
 
@@ -87,7 +96,7 @@ export class WorkflowController {
       return {
         success: false,
         message: 'Query parameter is required',
-      }
+      };
     }
 
     const safeLimit = Math.max(1, Math.min(limit, 100));
@@ -109,6 +118,23 @@ export class WorkflowController {
         ...result.pagination,
         currentPage: page,
       },
-    }
+    };
+  }
+
+  @Patch(':id/snooze')
+  async updateSnooze(
+    @Param('id') id: string,
+    @Body('snoozedUntil') snoozedUntil: string,
+    @Req() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; data: EmailWorkflowEntity }> {
+    const userId = req.user.userId;
+    this.logger.log(`PATCH /workflows/${id}/snooze - User: ${userId}`);
+    const snoozedDate = new Date(snoozedUntil);
+    const updated = await this.getWorkflowsUseCase.updateSnooze(
+      userId,
+      id,
+      snoozedDate,
+    );
+    return { success: true, data: updated };
   }
 }
