@@ -14,6 +14,8 @@ export interface IKanbanEmail {
   originalStatus?: KanbanStatus | null;
   aiSummary?: string;
   urgencyScore?: number;
+  priority?: number;
+  workflowId?: string;
 }
 
 export type KanbanStatus =

@@ -24,6 +24,8 @@ import {
   useGetWorkflows,
   useMutationUpdateWorkflowStatus,
   useMutationSnoozeWorkflow,
+  useMutationCreateOrUpdateWorkflow,
+  useMutationUpdatePriority,
 } from '@/features/inbox/hooks/workflowAPIs';
 import { WorkflowStatus } from '@/features/inbox/interfaces/workflow.interface';
 
@@ -184,6 +186,8 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
         isRead: gmailEmail?.isRead,
         isStarred: gmailEmail?.isStarred,
         hasAttachment: gmailEmail?.hasAttachment,
+        workflowId: workflow.id,
+        priority: workflow.priority || 0,
       };
     },
     [emailsData],
@@ -343,6 +347,19 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
     },
   });
 
+  const { mutateAsync: createOrUpdateWorkflow } =
+    useMutationCreateOrUpdateWorkflow({
+      onSuccess: () => {
+        refetchAllWorkflows();
+      },
+    });
+
+  const { mutateAsync: updatePriority } = useMutationUpdatePriority({
+    onSuccess: () => {
+      refetchAllWorkflows();
+    },
+  });
+
   // Handle drag and drop
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
@@ -421,19 +438,37 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
 
       const workflow = allWorkflows.find((w) => w.gmailMessageId === emailId);
 
-      if (!workflow) {
-        notification.error({
-          message: 'Error',
-          description: 'Could not find workflow for this email',
-        });
-        return;
-      }
-
       try {
-        await updateStatus({
-          id: workflow.id,
-          status: mapKanbanToWorkflowStatus(newStatus),
-        });
+        if (workflow) {
+          // Workflow exists, update status
+          await updateStatus({
+            id: workflow.id,
+            status: mapKanbanToWorkflowStatus(newStatus),
+          });
+        } else {
+          // Workflow doesn't exist, find email data and create workflow
+          const allLabelEmails = labelEmailsResults.flatMap(
+            (r) => r.data?.emails || [],
+          );
+          const email = allLabelEmails.find((e) => e.id === emailId);
+
+          if (!email) {
+            notification.error({
+              message: 'Error',
+              description: 'Could not find email data',
+            });
+            return;
+          }
+
+          await createOrUpdateWorkflow({
+            emailId: email.id,
+            subject: email.subject || '(No Subject)',
+            from: email.sender || 'unknown',
+            date: email.timestamp || new Date().toISOString(),
+            snippet: email.preview,
+            status: mapKanbanToWorkflowStatus(newStatus),
+          });
+        }
 
         notification.success({
           message: 'Email Moved',
@@ -454,6 +489,8 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
       dynamicColumns,
       notification,
       queryClient,
+      labelEmailsResults,
+      createOrUpdateWorkflow,
     ],
   );
 
@@ -625,6 +662,25 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
     });
   }, []);
 
+  // Handle priority change
+  const handleUpdatePriority = useCallback(
+    async (workflowId: string, priority: number) => {
+      try {
+        await updatePriority({ id: workflowId, priority });
+        notification.success({
+          message: 'Priority Updated',
+          duration: 2,
+        });
+      } catch (error) {
+        console.error('Failed to update priority:', error);
+        notification.error({
+          message: 'Failed to update priority',
+        });
+      }
+    },
+    [updatePriority, notification],
+  );
+
   return {
     columns,
     snoozedEmails,
@@ -642,5 +698,6 @@ export const useKanban = ({ mailboxId = 'INBOX' }: UseKanbanProps = {}) => {
     handleFilterChange,
     handleSortChange,
     handleClearFilters,
+    handleUpdatePriority,
   };
 };

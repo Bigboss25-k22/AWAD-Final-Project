@@ -17,7 +17,14 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  HolderOutlined,
 } from '@ant-design/icons';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from '@hello-pangea/dnd';
 import {
   useGetKanbanColumns,
   useMutationCreateColumn,
@@ -48,11 +55,6 @@ const GMAIL_LABELS = [
   { value: 'STARRED', label: 'Starred' },
   { value: 'IMPORTANT', label: 'Important' },
   { value: 'UNREAD', label: 'Unread' },
-  { value: 'CATEGORY_PERSONAL', label: 'Personal' },
-  { value: 'CATEGORY_SOCIAL', label: 'Social' },
-  { value: 'CATEGORY_PROMOTIONS', label: 'Promotions' },
-  { value: 'CATEGORY_UPDATES', label: 'Updates' },
-  { value: 'CATEGORY_FORUMS', label: 'Forums' },
 ];
 
 interface SettingsModalProps {
@@ -150,6 +152,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setIsFormVisible(true);
   };
 
+  const handleReorder = async (result: DropResult) => {
+    if (!result.destination) return;
+    if (result.destination.index === result.source.index) return;
+
+    const reorderedColumns = Array.from(columns);
+    const [removed] = reorderedColumns.splice(result.source.index, 1);
+    reorderedColumns.splice(result.destination.index, 0, removed);
+
+    // Update each column's order
+    for (let i = 0; i < reorderedColumns.length; i++) {
+      if (reorderedColumns[i].order !== i) {
+        await updateMutation.mutateAsync({
+          id: reorderedColumns[i].id,
+          input: { order: i },
+        });
+      }
+    }
+  };
+
   return (
     <Modal
       title={
@@ -164,41 +185,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       width={500}
     >
       <SettingsContent>
-        <ColumnListContainer>
-          {isLoading ? (
-            <LoadingContainer>
-              <Spin tip='Loading columns...' />
-            </LoadingContainer>
-          ) : columns.length === 0 ? (
-            <EmptyState>Initializing default INBOX column...</EmptyState>
-          ) : (
-            columns.map((column) => (
-              <ColumnItem key={column.id}>
-                <ColumnInfo>
-                  <ColumnName>{column.name}</ColumnName>
-                  <ColumnLabel>Label: {column.label}</ColumnLabel>
-                </ColumnInfo>
-                <ColumnActions>
-                  <Button
-                    type='text'
-                    icon={<EditOutlined />}
-                    onClick={() => handleEdit(column)}
-                  />
-                  <Popconfirm
-                    title='Delete column'
-                    description='Are you sure you want to delete this column?'
-                    onConfirm={() => handleDelete(column.id)}
-                    okText='Delete'
-                    cancelText='Cancel'
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Button type='text' danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                </ColumnActions>
-              </ColumnItem>
-            ))
-          )}
-        </ColumnListContainer>
+        <DragDropContext onDragEnd={handleReorder}>
+          <Droppable droppableId='settings-columns'>
+            {(provided) => (
+              <ColumnListContainer
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {isLoading ? (
+                  <LoadingContainer>
+                    <Spin tip='Loading columns...' />
+                  </LoadingContainer>
+                ) : columns.length === 0 ? (
+                  <EmptyState>Initializing default INBOX column...</EmptyState>
+                ) : (
+                  columns.map((column, index) => (
+                    <Draggable
+                      key={column.id}
+                      draggableId={column.id}
+                      index={index}
+                    >
+                      {(dragProvided) => (
+                        <ColumnItem
+                          ref={dragProvided.innerRef}
+                          {...dragProvided.draggableProps}
+                        >
+                          <Space>
+                            <span {...dragProvided.dragHandleProps}>
+                              <HolderOutlined style={{ cursor: 'grab' }} />
+                            </span>
+                            <ColumnInfo>
+                              <ColumnName>{column.name}</ColumnName>
+                              <ColumnLabel>Label: {column.label}</ColumnLabel>
+                            </ColumnInfo>
+                          </Space>
+                          <ColumnActions>
+                            <Button
+                              type='text'
+                              icon={<EditOutlined />}
+                              onClick={() => handleEdit(column)}
+                            />
+                            <Popconfirm
+                              title='Delete column'
+                              description='Are you sure you want to delete this column?'
+                              onConfirm={() => handleDelete(column.id)}
+                              okText='Delete'
+                              cancelText='Cancel'
+                              okButtonProps={{ danger: true }}
+                            >
+                              <Button
+                                type='text'
+                                danger
+                                icon={<DeleteOutlined />}
+                              />
+                            </Popconfirm>
+                          </ColumnActions>
+                        </ColumnItem>
+                      )}
+                    </Draggable>
+                  ))
+                )}
+                {provided.placeholder}
+              </ColumnListContainer>
+            )}
+          </Droppable>
+        </DragDropContext>
 
         {!isFormVisible ? (
           <Button

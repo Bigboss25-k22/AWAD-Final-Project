@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -134,6 +135,66 @@ export class WorkflowController {
       userId,
       id,
       snoozedDate,
+    );
+    return { success: true, data: updated };
+  }
+
+  @Get('by-email/:emailId')
+  async findByEmailId(
+    @Param('emailId') emailId: string,
+    @Req() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; data: EmailWorkflowEntity | null }> {
+    const userId = req.user.userId;
+    const workflow = await this.getWorkflowsUseCase.findByEmailId(
+      userId,
+      emailId,
+    );
+    return { success: true, data: workflow };
+  }
+
+  @Post()
+  async createOrUpdateWorkflow(
+    @Body()
+    body: {
+      emailId: string;
+      subject: string;
+      from: string;
+      date: string;
+      snippet?: string;
+      status: WorkflowStatus;
+    },
+    @Req() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; data: EmailWorkflowEntity }> {
+    const userId = req.user.userId;
+    this.logger.log(
+      `POST /workflows - User: ${userId}, Email: ${body.emailId}`,
+    );
+    const workflow = await this.getWorkflowsUseCase.createOrUpdateWorkflow(
+      userId,
+      {
+        emailId: body.emailId,
+        subject: body.subject,
+        from: body.from,
+        date: new Date(body.date),
+        snippet: body.snippet,
+      },
+      body.status,
+    );
+    return { success: true, data: workflow };
+  }
+
+  @Patch(':id/priority')
+  async updatePriority(
+    @Param('id') id: string,
+    @Body('priority') priority: number,
+    @Req() req: { user: { userId: string } },
+  ): Promise<{ success: boolean; data: EmailWorkflowEntity }> {
+    const userId = req.user.userId;
+    this.logger.log(`PATCH /workflows/${id}/priority - User: ${userId}`);
+    const updated = await this.getWorkflowsUseCase.updatePriority(
+      userId,
+      id,
+      priority,
     );
     return { success: true, data: updated };
   }

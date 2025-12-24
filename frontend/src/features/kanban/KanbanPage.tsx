@@ -77,6 +77,7 @@ const KanbanPage: React.FC = () => {
     snoozeModalOpen,
     selectedEmailForSnooze,
     refetch,
+    handleUpdatePriority,
   } = useKanban();
 
   const handleSnoozeConfirm = (snoozedUntil: Date) => {
@@ -207,6 +208,7 @@ const KanbanPage: React.FC = () => {
                   emails={column.emails}
                   onSnooze={openSnoozeModal}
                   onUnsnooze={handleUnsnooze}
+                  onPriorityChange={handleUpdatePriority}
                 />
               ))}
               {/* Snoozed column */}
@@ -217,6 +219,7 @@ const KanbanPage: React.FC = () => {
                   emails={snoozedEmails}
                   onSnooze={openSnoozeModal}
                   onUnsnooze={handleUnsnooze}
+                  onPriorityChange={handleUpdatePriority}
                 />
               )}
             </BoardContainer>

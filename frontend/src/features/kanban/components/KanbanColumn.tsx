@@ -18,6 +18,7 @@ interface KanbanColumnProps {
   emails: IKanbanEmail[];
   onSnooze: (emailId: string) => void;
   onUnsnooze: (emailId: string) => void;
+  onPriorityChange?: (workflowId: string, priority: number) => void;
 }
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -26,16 +27,17 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   emails,
   onSnooze,
   onUnsnooze,
+  onPriorityChange,
 }) => {
   return (
     <Droppable droppableId={id}>
-      {(provided, snapshot) => (
-        <ColumnContainer $isDraggingOver={snapshot.isDraggingOver}>
+      {(provided) => (
+        <ColumnContainer ref={provided.innerRef} {...provided.droppableProps}>
           <ColumnHeader $status={id}>
             <ColumnTitle>{title}</ColumnTitle>
             <ColumnCount>{emails.length}</ColumnCount>
           </ColumnHeader>
-          <ColumnContent ref={provided.innerRef} {...provided.droppableProps}>
+          <ColumnContent>
             {emails.map((email, index) => (
               <Draggable key={email.id} draggableId={email.id} index={index}>
                 {(dragProvided, dragSnapshot) => (
@@ -49,6 +51,12 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                       isDragging={dragSnapshot.isDragging}
                       onSnooze={() => onSnooze(email.id)}
                       onUnsnooze={() => onUnsnooze(email.id)}
+                      onPriorityChange={
+                        email.workflowId && onPriorityChange
+                          ? (priority) =>
+                              onPriorityChange(email.workflowId!, priority)
+                          : undefined
+                      }
                     />
                   </div>
                 )}
