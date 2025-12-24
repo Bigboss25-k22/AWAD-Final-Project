@@ -2,12 +2,17 @@
 
 import React, { useState, useCallback } from 'react';
 import { Button, Input, Tooltip, Layout } from 'antd';
-import { ReloadOutlined, AppstoreOutlined } from '@ant-design/icons';
+import {
+  ReloadOutlined,
+  AppstoreOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import { useKanban } from './hooks/useKanban';
 import { ViewToggle } from '@/components/ViewToggle';
 import { LoadingSpin } from '@/components/LoadingSpin';
 import { EmptyState } from '@/components/EmptyState';
 import { SnoozeModal } from './components/SnoozeModal';
+import { SettingsModal } from './components/SettingsModal';
 import { KanbanColumn } from './components/KanbanColumn';
 import {
   KanbanLayout,
@@ -33,6 +38,7 @@ const HeaderActions = styled.div`
 const KanbanPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPage, setSearchPage] = useState(1);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const {
     data: searchData,
@@ -117,6 +123,13 @@ const KanbanPage: React.FC = () => {
           {renderSearchInput()}
 
           <HeaderActions>
+            <Tooltip title='Settings'>
+              <Button
+                type='text'
+                icon={<SettingOutlined />}
+                onClick={() => setSettingsModalOpen(true)}
+              />
+            </Tooltip>
             <Tooltip title='Refresh'>
               <Button
                 type='text'
@@ -130,6 +143,10 @@ const KanbanPage: React.FC = () => {
         <Layout.Content>
           <EmptyState message='No emails to display' />
         </Layout.Content>
+        <SettingsModal
+          open={settingsModalOpen}
+          onClose={() => setSettingsModalOpen(false)}
+        />
       </KanbanLayout>
     );
   }
@@ -145,6 +162,13 @@ const KanbanPage: React.FC = () => {
         {renderSearchInput()}
 
         <HeaderActions>
+          <Tooltip title='Settings'>
+            <Button
+              type='text'
+              icon={<SettingOutlined />}
+              onClick={() => setSettingsModalOpen(true)}
+            />
+          </Tooltip>
           <Tooltip title='Refresh'>
             <Button
               type='text'
@@ -204,6 +228,11 @@ const KanbanPage: React.FC = () => {
         open={snoozeModalOpen}
         onClose={closeSnoozeModal}
         onSnooze={handleSnoozeConfirm}
+      />
+
+      <SettingsModal
+        open={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
       />
     </KanbanLayout>
   );
